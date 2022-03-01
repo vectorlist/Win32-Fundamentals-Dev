@@ -34,5 +34,5 @@
 *.ilk
 *.opendb
 *.db
-.vs/
+*/.vs
 .Bin/

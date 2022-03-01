@@ -11,7 +11,6 @@ bool bTrackMouse = false;
 bool bEnteredMouse = false;
 HWND mainHwnd;
 HWND childHwnd;
-#define callsde
 
 int main(int args, char* argv[])
 {

@@ -34,3 +34,4 @@
 *.ilk
 *.opendb
 .vs/
+.Bin/

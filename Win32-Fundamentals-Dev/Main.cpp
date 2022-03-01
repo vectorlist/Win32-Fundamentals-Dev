@@ -132,10 +132,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		printf("hmm");
 		//RedrawWindow(hwnd, NULL, NULL, RDW_UPDATENOW);
 		//RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
-		if (bHit[1]) {
-			bHit[1] = false;
-		}
-		else bHit[1] = true;
+	
 
 		//InvalidateRect(hwnd, NULL, TRUE);
 		RedrawWindow(hwnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);

@@ -11,13 +11,23 @@ name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
 processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #define WC_WINDOW	"WC_WINDOW"
-#define WC_CHILD	"WC_CHILD"
 LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT WINAPI SubClassWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR id, DWORD_PTR data);
-HWND mainHwnd;
-HWND subclassControl;
-HWND subclassHookControl;
-HHOOK hHook;
+LRESULT WINAPI HookCallWndProc(INT code, WPARAM wp, LPARAM lp);
+
+
+HHOOK hHook = nullptr;
+
+struct WindowData
+{
+	HWND hwnd;
+	LPCSTR name;
+	bool bSubClass = false;
+};
+
+WindowData window;
+WindowData button_subclass;
+WindowData button_subclass_hook;
 
 int main(int args, char* argv[])
 {
@@ -33,20 +43,30 @@ int main(int args, char* argv[])
 	wc.lpfnWndProc = WndProc;
 	GetClassInfoEx(wc.hInstance, wc.lpszClassName, &wc);
 	RegisterClassEx(&wc);
+	
+	//Main window
+	window.name = "Main Window";
+	window.hwnd = CreateWindowEx(NULL, wc.lpszClassName, window.name, 
+		WS_POPUP | WS_VISIBLE, 600, 400, 700, 300, nullptr, 0, wc.hInstance, &window);
 
-	mainHwnd = CreateWindowEx(NULL, wc.lpszClassName, WC_WINDOW, WS_POPUP | WS_VISIBLE, 600, 400, 700, 300, nullptr, 0, wc.hInstance, NULL);
-
-	wc.lpszClassName = WC_BUTTON;
-	if (!GetClassInfoEx(wc.hInstance, wc.lpszClassName, &wc)) {
-		printf("%s is built-in class... set subclass", wc.lpszClassName);
-	}
 	//Basic SubClassing
-	subclassControl = CreateWindowEx(NULL, wc.lpszClassName, "SubClass Button", WS_CHILD | WS_VISIBLE, 50, 120, 200, 60, mainHwnd, 0, wc.hInstance, NULL);
-	SetWindowSubclass(subclassControl, SubClassWndProc, 0, 0);
+	//
+	button_subclass.name = "SubClass Button";
+	button_subclass.hwnd = CreateWindowEx(NULL, WC_BUTTON, button_subclass.name,
+		WS_CHILD | WS_VISIBLE, 50, 120, 200, 60, window.hwnd, 0, wc.hInstance, &button_subclass);
+	SetWindowSubclass(button_subclass.hwnd, SubClassWndProc, 0, 0);
 	//SubClassing with HOOK
-	subclassHookControl = CreateWindowEx(NULL, wc.lpszClassName, "SubClass Hook Button", WS_CHILD | WS_VISIBLE, 250, 120, 200, 60, mainHwnd, 0, wc.hInstance, NULL);
-	SetWindowSubclass(subclassHookControl, SubClassWndProc, 0, 0);
-	ShowWindow(mainHwnd, TRUE);
+	//Begin Hook(to get WM_NCCREATE WM_NCSIZE WM_NCPAINT WM_CREATE WM_SIZE)
+	hHook = SetWindowsHookEx(WH_CALLWNDPROC, HookCallWndProc, nullptr, GetCurrentThreadId());
+	button_subclass_hook.name = "SubClass Hook Button";
+	button_subclass_hook.hwnd = CreateWindowEx(NULL, WC_BUTTON, button_subclass_hook.name,
+		WS_CHILD | WS_VISIBLE, 350, 120, 200, 60, window.hwnd, 0, wc.hInstance, &button_subclass_hook);
+	//End of Hook
+	UnhookWindowsHookEx(hHook);
+	hHook = nullptr;
+	SetWindowSubclass(button_subclass_hook.hwnd, SubClassWndProc, 0, 0);
+
+	ShowWindow(window.hwnd, TRUE);
 	
 	MSG msg{};
 	while (GetMessage(&msg, NULL, 0, 0))
@@ -61,21 +81,27 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
 	RECT rc;
 	TCHAR code[256];
-
+	WindowData* window = nullptr;
 	switch (msg)
 	{
 	case WM_NCCREATE:
-		GetWindowText(hwnd, code, 256);
-		printf("%s [wm_create]", code);
+	{
+		window = (WindowData*)((LPCREATESTRUCT)lp)->lpCreateParams;
+		if (!window) break;
+		printf("[WM_NCCREATE] %s\n", window->name);
 		break;
+	}
 	case WM_PAINT: {
 		PAINTSTRUCT ps{};
 		HDC dc = BeginPaint(hwnd, &ps);
 		GetClientRect(hwnd, &rc);
 		HBRUSH br = (HBRUSH)GetStockObject(DC_BRUSH);
 		SelectObject(dc,br);
-		if (hwnd == subclassControl) {
+		if (hwnd == button_subclass.hwnd) {
 			SetDCBrushColor(dc, RGB(120, 80, 0));
+		}
+		else if (hwnd == button_subclass_hook.hwnd) {
+			SetDCBrushColor(dc, RGB(50, 80, 150));
 		}
 		else {
 			SetDCBrushColor(dc, RGB(60, 60, 60));
@@ -85,13 +111,14 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		GetWindowText(hwnd, code, 256);
 		SetBkMode(dc, TRANSPARENT);
 		SetTextColor(dc, RGB(220, 220, 220));
-		if(hwnd == subclassControl)
+		if(hwnd == button_subclass.hwnd || hwnd == button_subclass_hook.hwnd)
 			DrawText(dc, code, strlen(code), &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 		EndPaint(hwnd, &ps);
 		break;
 	}
 	}
-	if (hwnd == subclassControl) {
+
+	if (hwnd == button_subclass.hwnd || hwnd == button_subclass_hook.hwnd) {
 		return DefSubclassProc(hwnd, msg, wp, lp);
 	}
 	return DefWindowProc(hwnd, msg, wp, lp);
@@ -99,6 +126,17 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 LRESULT WINAPI SubClassWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR id, DWORD_PTR data)
 {
-	//return DefSubclassProc(hwnd, msg, wp, lp);
 	return WndProc(hwnd, msg, wp, lp);
 }
+
+LRESULT WINAPI HookCallWndProc(INT code, WPARAM wp, LPARAM lp)
+{
+	if(code < 0)
+		return CallNextHookEx(hHook, code, wp, lp);
+	if (code == HC_ACTION) {
+		CWPSTRUCT* cs = (CWPSTRUCT*)lp;
+		LRESULT res = WndProc(cs->hwnd, cs->message, cs->wParam, cs->lParam);
+	}
+	return CallNextHookEx(hHook, code, wp, lp);
+}
+

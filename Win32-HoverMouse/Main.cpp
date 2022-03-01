@@ -74,6 +74,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case WM_MOUSELEAVE: {
 		if (bEnteredMouse) bEnteredMouse = false;
 		if (hwnd == childHwnd) printf("WM_MOUSELEAVE\n");
+
 		break;
 	}
 	case WM_PAINT: {

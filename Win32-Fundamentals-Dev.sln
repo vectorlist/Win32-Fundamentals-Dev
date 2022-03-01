@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.28307.1758
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Win32-NonClient", "Win32-Fundamentals-Dev\Win32-Fundamentals-Dev.vcxproj", "{36AF0CDD-83F6-478B-9D77-DEA79AAB1BC1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Win32-HooverMouse", "Win32-HooverMouse\Win32-HooverMouse.vcxproj", "{6E2BCD26-539B-4BC9-BBCB-2AA2E4C9B86C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Win32-HoverMouse", "Win32-HoverMouse\Win32-HooverMouse.vcxproj", "{6E2BCD26-539B-4BC9-BBCB-2AA2E4C9B86C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -33,5 +33,6 @@
 *.pdb
 *.ilk
 *.opendb
+*.db
 .vs/
 .Bin/

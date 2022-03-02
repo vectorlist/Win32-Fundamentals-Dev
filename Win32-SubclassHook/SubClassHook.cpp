@@ -15,14 +15,12 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT WINAPI SubClassWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR id, DWORD_PTR data);
 LRESULT WINAPI HookCallWndProc(INT code, WPARAM wp, LPARAM lp);
 
-
 HHOOK hHook = nullptr;
 
 struct WindowData
 {
 	HWND hwnd;
 	LPCSTR name;
-	bool bSubClass = false;
 };
 
 WindowData window;

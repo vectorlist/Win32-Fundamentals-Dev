@@ -11,8 +11,8 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #include <Log.h>
 
-#define WC_WINDOW "WC_WINDOW"
-#define NONCLIENT_THICKNESS 20
+#define WC_WINDOW "Window"
+#define WC_SUPERCLASS_BUTTON "Superclass Button"
 LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 WNDPROC pPreWndProc = nullptr;
 struct WindowData
@@ -23,10 +23,13 @@ struct WindowData
 
 WindowData window;
 WindowData button;
+WindowData sc_button;
 
 int main(int args, char* argv[])
 {
+	//initialize controls
 	InitCommonControls();
+
 	WNDCLASSEX wc{};
 	wc.cbSize = sizeof(wc);
 	wc.hbrBackground = (HBRUSH)GetStockObject(DKGRAY_BRUSH);
@@ -39,32 +42,43 @@ int main(int args, char* argv[])
 	RegisterClassEx(&wc);
 	window.name = WC_WINDOW;
 	window.hwnd = CreateWindowEx(NULL, wc.lpszClassName, WC_WINDOW, WS_POPUP | WS_VISIBLE,
-		500, 200, 700, 300, nullptr, 0, wc.hInstance, &window);
+		700, 300, 700, 300, nullptr, 0, wc.hInstance, &window);
 
 	//SuperClassing
 	//Get Control Base infomation
 	WNDCLASSEX swc{};
 	swc.cbSize = sizeof(WNDCLASSEX);
 
-	bool bInfo = GetClassInfoEx(GetModuleHandle(NULL), WC_BUTTON, &swc);
-
+	if (GetClassInfoEx(NULL, WC_BUTTON, &swc)) {
+		printf("Copy WC_BUTTON info to WC_SUPERCLASS_BUTTON\n");
+	}
+	//temportary save wndproc
 	pPreWndProc = swc.lpfnWndProc;
+	//to use SetWindowLong or SetWindowLongPtr(hwnd, 0, data)
 	swc.cbWndExtra += sizeof(WindowData*);
 	swc.hInstance = GetModuleHandle(NULL);
-	swc.lpszClassName = "new button";
+	swc.lpszClassName = WC_SUPERCLASS_BUTTON;
+	//Remove Internal register SuperClass
 	swc.style &= ~CS_GLOBALCLASS;
+	//set new wndproc
 	swc.lpfnWndProc = WndProc;
 	
 	std::cout << LOG::ClassStyle(swc.style) << std::endl;
 
-	bool b = RegisterClassEx(&swc);
-	if (b)
-		printf("Register Class %s\n", swc.lpszClassName);
-
-	button.name = "button_ex";
-	button.hwnd = CreateWindowEx(NULL, swc.lpszClassName, button.name,
+	//has aldreay new superclass if it failed
+	if (RegisterClassEx(&swc)) {
+		printf("registered new %s\n", swc.lpszClassName);
+	}
+	//creating new superclass control
+	sc_button.name = WC_SUPERCLASS_BUTTON;
+	sc_button.hwnd = CreateWindowEx(NULL, swc.lpszClassName, sc_button.name,
 		BS_PUSHBUTTON |WS_VISIBLE | WS_CHILD,
-		100, 100, 30, 100, window.hwnd, 0, swc.hInstance, &button);
+		70, 100, 200, 60, window.hwnd, 0, swc.hInstance, &sc_button);
+	//creating basic button control
+	button.name = WC_BUTTON;
+	button.hwnd = CreateWindowEx(NULL, WC_BUTTON, button.name,
+		BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD,
+		300, 100, 200, 60, window.hwnd, 0, swc.hInstance, &button);
 
 	ShowWindow(window.hwnd, TRUE);
 
@@ -79,17 +93,44 @@ int main(int args, char* argv[])
 
 LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
+	RECT rc;
+	TCHAR code[125];
 	switch (msg)
 	{
 	case WM_NCCREATE: {
 		WindowData* window = (WindowData*)((LPCREATESTRUCT)lp)->lpCreateParams;
-		printf("create %s\n", window->name);
+		printf("[WM_NCCREATE] %s\n", window->name);
 		break; 
 	}
+	case WM_PAINT:
+	{
+		PAINTSTRUCT ps{};
+		HDC dc = BeginPaint(hwnd, &ps);
+		GetClientRect(hwnd, &rc);
+		HBRUSH br = (HBRUSH)GetStockObject(DC_BRUSH);
+		SelectObject(dc, br);
+		if (hwnd == sc_button.hwnd) {
+			SetDCBrushColor(dc, RGB(120, 80, 0));
+		}
+		else {
+			SetDCBrushColor(dc, RGB(60, 60, 60));
+		}
+		FillRect(dc, &rc, br);
+
+		GetWindowText(hwnd, code, 256);
+		printf("[WM_PAINT] %s\n", code);
+		SetBkMode(dc, TRANSPARENT);
+		SetTextColor(dc, RGB(220, 220, 220));
+		if (hwnd == sc_button.hwnd)
+			DrawText(dc, code, strlen(code), &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		EndPaint(hwnd, &ps);
+		break;
 	}
-	if (hwnd == button.hwnd) {
+	}
+	if (hwnd == sc_button.hwnd) {
 
 		return CallWindowProc(pPreWndProc, hwnd, msg, wp, lp);
 	}
+
 	return DefWindowProc(hwnd, msg, wp, lp);
 }

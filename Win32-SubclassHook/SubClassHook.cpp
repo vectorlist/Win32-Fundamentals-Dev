@@ -72,6 +72,8 @@ int main(int args, char* argv[])
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+	RemoveWindowSubclass(button_subclass.hwnd, SubClassWndProc, 0);
+	RemoveWindowSubclass(button_subclass_hook.hwnd, SubClassWndProc, 0);
 	return msg.lParam;
 }
 
@@ -107,6 +109,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		FillRect(dc, &rc, br);
 		
 		GetWindowText(hwnd, code, 256);
+		printf("[WM_PAINT] %s\n", code);
 		SetBkMode(dc, TRANSPARENT);
 		SetTextColor(dc, RGB(220, 220, 220));
 		if(hwnd == button_subclass.hwnd || hwnd == button_subclass_hook.hwnd)

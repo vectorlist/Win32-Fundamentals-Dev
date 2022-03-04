@@ -31,7 +31,7 @@ int main(int args, char* argv[])
 	wc.hbrBackground = (HBRUSH)GetStockObject(GRAY_BRUSH);
 	RegisterClassEx(&wc);
 
-	childHwnd = CreateWindowEx(NULL, wc.lpszClassName, WC_WINDOW, WS_CHILD | WS_VISIBLE, 170, 80, 300, 150, mainHwnd, 0, wc.hInstance, NULL);
+	childHwnd = CreateWindowEx(NULL, wc.lpszClassName, "Button", WS_CHILD | WS_VISIBLE, 170, 80, 200, 50, mainHwnd, 0, wc.hInstance, NULL);
 	ShowWindow(mainHwnd, TRUE);
 	bTrackMouse = true;
 	MSG msg{};
@@ -45,16 +45,19 @@ int main(int args, char* argv[])
 
 LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
+	RECT rc;
+	TCHAR code[256];
 	switch (msg)
 	{
 	case WM_CREATE: {
 		break;
 	}
 	case WM_MOUSEMOVE: {
+		if (hwnd != childHwnd) break;
 		if (!bEnteredMouse) {
 			bEnteredMouse = true;
-			if(hwnd == childHwnd) printf("WM_MOUSEENTER\n");
-
+			printf("WM_MOUSEENTER\n");
+			InvalidateRect(hwnd, NULL, FALSE);
 		}
 		if (bTrackMouse) {
 			TRACKMOUSEEVENT tm{};
@@ -68,16 +71,40 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		break;
 	}
 	case WM_MOUSEHOVER: {
-		if (hwnd == childHwnd) printf("WM_MOUSEHOVER\n");
+		if (hwnd != childHwnd) break;
+		printf("WM_MOUSEHOVER\n");
 		break;
 	}
 	case WM_MOUSELEAVE: {
+		if (hwnd != childHwnd) break;
 		if (bEnteredMouse) bEnteredMouse = false;
-		if (hwnd == childHwnd) printf("WM_MOUSELEAVE\n");
-
+		printf("WM_MOUSELEAVE\n");
+		InvalidateRect(hwnd, NULL, FALSE);
 		break;
 	}
 	case WM_PAINT: {
+		if (hwnd != childHwnd) break;
+		printf("[WM_PAINT]\n");
+
+		PAINTSTRUCT ps{};
+		HDC dc = BeginPaint(hwnd, &ps);
+		GetClientRect(hwnd, &rc);
+		HBRUSH br = (HBRUSH)GetStockObject(DC_BRUSH);
+		SelectObject(dc, br);
+		SetDCBrushColor(dc, RGB(120, 80, 0));
+		FillRect(dc, &rc, br);
+
+		LPCSTR state = "idle mouse";
+		if (bEnteredMouse)
+			state = "Entered Mouse";
+		else
+			state = "Leave Mouse";
+			
+		SetBkMode(dc, TRANSPARENT);
+		SetTextColor(dc, RGB(220, 220, 220));
+		DrawText(dc, state, strlen(state), &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	
+		EndPaint(hwnd, &ps);
 		break;
 	}
 	

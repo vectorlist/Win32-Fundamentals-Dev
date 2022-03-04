@@ -12,9 +12,14 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #include <Log.h>
 
 #define WC_WINDOW "Window"
+#define WC_SUBCLASS_BUTTON "Subclass Button"
 #define WC_SUPERCLASS_BUTTON "Superclass Button"
+
 LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
-WNDPROC pPreWndProc = nullptr;
+
+WNDPROC pPreSubClassWndProc = nullptr;
+WNDPROC pPreSuperClassWndProc = nullptr;
+
 struct WindowData
 {
 	HWND hwnd;
@@ -22,8 +27,8 @@ struct WindowData
 };
 
 WindowData window;
-WindowData button;
-WindowData sc_button;
+WindowData sub_button;
+WindowData super_button;
 
 int main(int args, char* argv[])
 {
@@ -53,7 +58,7 @@ int main(int args, char* argv[])
 		printf("Copy WC_BUTTON info to WC_SUPERCLASS_BUTTON\n");
 	}
 	//temportary save wndproc
-	pPreWndProc = swc.lpfnWndProc;
+	pPreSuperClassWndProc = swc.lpfnWndProc;
 	//to use SetWindowLong or SetWindowLongPtr(hwnd, 0, data)
 	swc.cbWndExtra += sizeof(WindowData*);
 	swc.hInstance = GetModuleHandle(NULL);
@@ -70,15 +75,17 @@ int main(int args, char* argv[])
 		printf("registered new %s\n", swc.lpszClassName);
 	}
 	//creating new superclass control
-	sc_button.name = WC_SUPERCLASS_BUTTON;
-	sc_button.hwnd = CreateWindowEx(NULL, swc.lpszClassName, sc_button.name,
+	super_button.name = WC_SUPERCLASS_BUTTON;
+	super_button.hwnd = CreateWindowEx(NULL, swc.lpszClassName, super_button.name,
 		BS_PUSHBUTTON |WS_VISIBLE | WS_CHILD,
-		70, 100, 200, 60, window.hwnd, 0, swc.hInstance, &sc_button);
-	//creating basic button control
-	button.name = WC_BUTTON;
-	button.hwnd = CreateWindowEx(NULL, WC_BUTTON, button.name,
+		70, 100, 200, 60, window.hwnd, 0, swc.hInstance, &super_button);
+	//creating button control
+	sub_button.name = WC_SUBCLASS_BUTTON;
+	sub_button.hwnd = CreateWindowEx(NULL, WC_BUTTON, sub_button.name,
 		BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD,
-		300, 100, 200, 60, window.hwnd, 0, swc.hInstance, &button);
+		300, 100, 200, 60, window.hwnd, 0, swc.hInstance, &sub_button);
+	//set classic subclassing 
+	pPreSubClassWndProc = (WNDPROC)SetWindowLongPtr(sub_button.hwnd, GWLP_WNDPROC, (LONG)WndProc);
 
 	ShowWindow(window.hwnd, TRUE);
 
@@ -109,28 +116,35 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		GetClientRect(hwnd, &rc);
 		HBRUSH br = (HBRUSH)GetStockObject(DC_BRUSH);
 		SelectObject(dc, br);
-		if (hwnd == sc_button.hwnd) {
+		if (hwnd == super_button.hwnd) {
 			SetDCBrushColor(dc, RGB(120, 80, 0));
+		}
+		else if(hwnd == sub_button.hwnd) {
+			SetDCBrushColor(dc, RGB(60, 120, 180));
 		}
 		else {
 			SetDCBrushColor(dc, RGB(60, 60, 60));
 		}
 		FillRect(dc, &rc, br);
-
-		GetWindowText(hwnd, code, 256);
-		printf("[WM_PAINT] %s\n", code);
-		SetBkMode(dc, TRANSPARENT);
-		SetTextColor(dc, RGB(220, 220, 220));
-		if (hwnd == sc_button.hwnd)
+		if (hwnd != window.hwnd) {
+			GetWindowText(hwnd, code, 125);
+			printf("[WM_PAINT] %s\n", code);
+			SetBkMode(dc, TRANSPARENT);
+			SetTextColor(dc, RGB(220, 220, 220));
 			DrawText(dc, code, strlen(code), &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		}
 		EndPaint(hwnd, &ps);
 		break;
 	}
 	}
-	if (hwnd == sc_button.hwnd) {
+	if (hwnd == super_button.hwnd) {
 
-		return CallWindowProc(pPreWndProc, hwnd, msg, wp, lp);
+		return CallWindowProc(pPreSuperClassWndProc, hwnd, msg, wp, lp);
+	}
+	if (hwnd == sub_button.hwnd) {
+		return CallWindowProc(pPreSubClassWndProc, hwnd, msg, wp, lp);
 	}
 
 	return DefWindowProc(hwnd, msg, wp, lp);
 }
+

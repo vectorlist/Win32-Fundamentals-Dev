@@ -11,9 +11,9 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #include <Log.h>
 
-#define WC_WINDOW "Window"
-#define WC_SUBCLASS_BUTTON "Subclass Button"
-#define WC_SUPERCLASS_BUTTON "Superclass Button"
+#define WC_WINDOW				"Window"
+#define WC_SUBCLASS_BUTTON		"Subclass Button"
+#define WC_SUPERCLASS_BUTTON	"Superclass Button"
 
 LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
@@ -138,7 +138,6 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	}
 	}
 	if (hwnd == super_button.hwnd) {
-
 		return CallWindowProc(pPreSuperClassWndProc, hwnd, msg, wp, lp);
 	}
 	if (hwnd == sub_button.hwnd) {

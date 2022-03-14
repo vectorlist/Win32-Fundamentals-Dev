@@ -50,13 +50,13 @@ int main(int args, char* argv[])
 	ttwc.cbSize = sizeof(wc);
 	ttwc.lpszClassName = TOOLTIPS_CLASS;
 	GetClassInfoEx(GetModuleHandle(NULL), ttwc.lpszClassName, &ttwc);
+	//Remove defualt shadow style
 	if (ttwc.style & CS_DROPSHADOW) {
-		printf("%s Remove CS_DROPSHADOW\n", ttwc.lpszClassName);
 		ttwc.style &= ~CS_DROPSHADOW;
 	}
 	ttwc.lpszClassName = WC_TOOLTIP;
 	PreWndProc = ttwc.lpfnWndProc;
-	//ttwc.lpfnWndProc = WndProc;
+	
 	if (RegisterClassEx(&ttwc)) {
 		printf("Registered %s class\n", ttwc.lpszClassName);
 	}
@@ -127,7 +127,19 @@ LRESULT TooTipCustomDraw(NMTTCUSTOMDRAW* lptCd) {
 	return CDRF_DODEFAULT;
 }
 void OnTTShow(NMHDR* hdr) {
-	RECT rc{ 300,300, 500, 500 };
+	HDC dc = ((NMTTCUSTOMDRAW*)hdr)->nmcd.hdc;
+	HFONT font = (HFONT)SendMessage(hdr->hwndFrom, WM_GETFONT, 0,0);
+	HFONT preFont = (HFONT)SelectObject(dc, font);
+	TCHAR text[256];
+	TOOLINFO info{};
+	info.cbSize = sizeof(info);
+	info.hwnd = GetParent(tooltip.hwnd);
+	info.uId = (UINT_PTR)GetParent(tooltip.hwnd);
+	info.lpszText = text;
+	SendMessage(tooltip.hwnd, TTM_GETTEXTA, 256, (LPARAM)(LPTOOLINFO)&info);
+
+	RECT rc;
+	GetWindowRect(hdr->hwndFrom, &rc);
 	LRESULT res = SendMessage(hdr->hwndFrom, TTM_ADJUSTRECT, TRUE, (LPARAM)&rc);
 	
 	SetWindowPos(hdr->hwndFrom,
@@ -153,6 +165,7 @@ LRESULT ToolTipNotify(NMHDR* hdr) {
 	case TTN_SHOW:
 		printf("TTN_SHOW\n");
 		OnTTShow(hdr);
+		return TRUE;
 		break;
 	case NM_CUSTOMDRAW:
 		printf("NM_CUSTOMDRAW\n");
@@ -184,7 +197,8 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			WC_TOOLTIP, 
 			NULL,
 			//WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
-			WS_POPUP | TTS_NOPREFIX,
+			//WS_POPUP | TTS_NOPREFIX,
+			TTS_NOPREFIX,
 			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 			hwnd, NULL, GetModuleHandle(NULL), NULL);
 		
@@ -194,12 +208,12 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		//info.uFlags = TTF_SUBCLASS | TTF_IDISHWND | TTF_TRANSPARENT;
 		info.hwnd = hwnd;
 		info.hinst = GetModuleHandle(NULL);
-		info.uId = 0;
+		info.uId = (UINT_PTR)hwnd;
 		info.lpszText = (LPSTR)child.name;
 		
 		GetClientRect(hwnd, &info.rect);
 
-		
+		printf("Add Tool hwnd: %d\n", info.uId);
 		SendMessage(tooltip.hwnd, TTM_ADDTOOL, 0, (LPARAM)&info);
 		SendMessage(tooltip.hwnd, TTM_SETTIPBKCOLOR, (WPARAM)RGB(100, 0, 0), 0);
 		SendMessage(tooltip.hwnd, TTM_SETMAXTIPWIDTH, 0, 130);

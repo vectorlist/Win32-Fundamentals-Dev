@@ -29,6 +29,8 @@ LPCSTR LOG::ClassStyle(UINT style)
 		list.emplace_back("CS_BYTEALIGNWINDOW");
 	if (style & CS_GLOBALCLASS)
 		list.emplace_back("CS_GLOBALCLASS");
+	if (style & CS_DROPSHADOW)
+		list.emplace_back("CS_DROPSHADOW");
 
 	for (int i = 0; i < list.size(); i++) {
 		if (i + 1 == list.size())

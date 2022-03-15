@@ -75,20 +75,21 @@ int main(int args, char argv[]) {
 	child.name = "first window";
 	child.br = CreateSolidBrush(RGB(88, 88, 88));
 	child.hwnd = CreateWindowEx(NULL, wc.lpszClassName, child.name, WS_CHILD | WS_VISIBLE,
-		80, 70, 200, 100, mainWindow.hwnd, 0, wc.hInstance, &child);
+		130, 70, 200, 100, mainWindow.hwnd, 0, wc.hInstance, &child);
 
 	child2.name = "second window";
 	child2.br = CreateSolidBrush(RGB(100, 100, 88));
 	child2.hwnd = CreateWindowEx(NULL, wc.lpszClassName, child.name, WS_CHILD | WS_VISIBLE,
-		300, 70, 200, 100, mainWindow.hwnd, 0, wc.hInstance, &child2);
+		360, 70, 200, 100, mainWindow.hwnd, 0, wc.hInstance, &child2);
 
 	tooltip.name = WC_TOOLTIP;
-	tooltip.br = CreateSolidBrush(RGB(40, 80, 180));
+	//tooltip.br = CreateSolidBrush(RGB(40, 80, 180));
+	tooltip.br = CreateSolidBrush(RGB(22, 22, 22));
 	tooltip.hwnd = CreateWindowEx(NULL, ttwc.lpszClassName, 0, WS_POPUP,
 		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 		child.hwnd, 0, hInst, 0);
 
-	SetToolTip(child.hwnd, tooltip.hwnd, "this is first child");
+	SetToolTip(child.hwnd, tooltip.hwnd, "this is first child\r cool window");
 	SetToolTip(child2.hwnd, tooltip.hwnd, "this is second child");
 
 	SetWindowTheme(tooltip.hwnd, L"", L"");
@@ -103,6 +104,28 @@ int main(int args, char argv[]) {
 		
 	}
 	return (int)msg.lParam;
+}
+//TODO : clac multiline text size
+SIZE GetMultiLineSize(HWND hwnd, LPCSTR text, UINT lineWidth) {
+	SIZE size{0};
+	HDC dc = GetDC(hwnd);
+	HFONT font = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
+	SelectObject(dc, font);
+	std::string str(text);
+	GetTextExtentPoint32(dc, text, strlen(text), &size);
+	int line_x = size.cx;
+	int line_num = 1;
+	int temp_line_x = min(size.cx, lineWidth);
+
+	while (line_x >= lineWidth)
+	{
+		line_num++;
+		line_x -= lineWidth;
+		temp_line_x = max(temp_line_x, line_x);
+	} 
+	size.cx = temp_line_x;
+	size.cy = size.cy * line_num;
+	return size;
 }
 
 void SetToolTip(HWND srcHwnd, HWND tHwnd, LPCSTR text) {
@@ -143,8 +166,9 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case WM_NOTIFY: {
 		NMHDR* hdr = (LPNMHDR)lp;
 		if (hdr->hwndFrom == tooltip.hwnd) {
-			//printf("Notify Tooltip\n");
-			if (hdr->code == NM_CUSTOMDRAW) {
+			switch (hdr->code)
+			{
+			case NM_CUSTOMDRAW: {
 				printf("Notify NM_CUSTOMDRAW\n");
 				NMTTCUSTOMDRAW* tcd = (NMTTCUSTOMDRAW*)hdr;
 				HDC dc = tcd->nmcd.hdc;
@@ -153,16 +177,54 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 				switch (stage)
 				{
 				case CDDS_PREPAINT: {
-					FillRect(dc, &rc, tooltip.br);
+					printf("Notify CDDS_PREPAINT\n");
+					RECT fixedRc = rc;
+
+					//FillRect(dc, &fixedRc, tooltip.br);
+					SelectObject(dc, tooltip.br);
+					SelectObject(dc, (HPEN)GetStockObject(DC_PEN));
+					SetDCPenColor(dc, RGB(133, 133, 133));
+					Rectangle(dc, rc.left, rc.top, rc.right, rc.bottom);
 					LPCSTR text = GetToolTipText(hwnd, hdr->hwndFrom);
+					std::string t(text);
 					SetBkMode(dc, TRANSPARENT);
 					SetTextColor(dc, RGB(220, 220, 220));
-					DrawText(dc, text, -1, &rc, DT_CENTER | DT_VCENTER);
+					DrawText(dc, text, t.size(), &fixedRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+					//TextOut()
 					return CDRF_SKIPDEFAULT;
 				}
 				}
 				return CDRF_DODEFAULT;
+				break;
 			}
+			case TTN_SHOW: {
+				printf("Notify TTN_SHOW\n");
+				LPCSTR text = GetToolTipText(hwnd, hdr->hwndFrom);
+				HDC dc = GetDC(hdr->hwndFrom);
+				HFONT font = (HFONT)SendMessage(hdr->hwndFrom, WM_GETFONT, 0, 0);
+				SelectObject(dc, font);
+				SIZE textSize{0};
+				GetTextExtentPoint32(dc, text, strlen(text), &textSize);
+
+				//SIZE textSize = GetMultiLineSize(tooltip.hwnd, text, 60);
+
+				RECT rc;
+				GetWindowRect(hdr->hwndFrom, &rc);
+				rc.right = rc.left + textSize.cx;
+				rc.bottom = rc.top + textSize.cy;
+
+				int w = rc.right - rc.left + 16;
+				int h = rc.bottom - rc.top  + 12;
+
+				SendMessage(hdr->hwndFrom, TTM_ADJUSTRECT, TRUE, (LPARAM)&rc);
+				SetWindowPos(hdr->hwndFrom, NULL, rc.left, rc.top, w, h,
+					SWP_NOZORDER | SWP_NOACTIVATE);
+				return TRUE;
+				
+			}
+			}
+
+			
 		}
 		break;
 	}
@@ -172,6 +234,9 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		RECT rc;
 		GetClientRect(hwnd, &rc);
 		FillRect(dc, &rc, window->br);
+		SetBkMode(dc, TRANSPARENT);
+		SetTextColor(dc, RGB(220, 220, 220));
+		DrawText(dc, window->name, -1, &rc, DT_CENTER | DT_VCENTER);
 		EndPaint(hwnd, &ps);
 		break;
 	}

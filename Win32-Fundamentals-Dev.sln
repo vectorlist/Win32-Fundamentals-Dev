@@ -15,7 +15,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Win32-Splitter", "Win32-Spl
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Win32-Direct2D", "Win32-Direct2D\Win32-Direct2D.vcxproj", "{8A552806-0DE1-4555-A96B-9DE2D0D5DF22}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Win32-Canvas", "Win32-Canvas\Win32-Canvas.vcxproj", "{81B2F78D-964F-434A-BDDC-4B039DCB930B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Win32-ToolTip", "Win32-Canvas\Win32-Canvas.vcxproj", "{81B2F78D-964F-434A-BDDC-4B039DCB930B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Win32-MinMax", "Win32-MinMax\Win32-MinMax.vcxproj", "{A6A5161A-EC0B-428E-B87E-85DAE2BC07E6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -81,6 +83,14 @@ Global
 		{81B2F78D-964F-434A-BDDC-4B039DCB930B}.Release|x64.Build.0 = Release|x64
 		{81B2F78D-964F-434A-BDDC-4B039DCB930B}.Release|x86.ActiveCfg = Release|Win32
 		{81B2F78D-964F-434A-BDDC-4B039DCB930B}.Release|x86.Build.0 = Release|Win32
+		{A6A5161A-EC0B-428E-B87E-85DAE2BC07E6}.Debug|x64.ActiveCfg = Debug|x64
+		{A6A5161A-EC0B-428E-B87E-85DAE2BC07E6}.Debug|x64.Build.0 = Debug|x64
+		{A6A5161A-EC0B-428E-B87E-85DAE2BC07E6}.Debug|x86.ActiveCfg = Debug|Win32
+		{A6A5161A-EC0B-428E-B87E-85DAE2BC07E6}.Debug|x86.Build.0 = Debug|Win32
+		{A6A5161A-EC0B-428E-B87E-85DAE2BC07E6}.Release|x64.ActiveCfg = Release|x64
+		{A6A5161A-EC0B-428E-B87E-85DAE2BC07E6}.Release|x64.Build.0 = Release|x64
+		{A6A5161A-EC0B-428E-B87E-85DAE2BC07E6}.Release|x86.ActiveCfg = Release|Win32
+		{A6A5161A-EC0B-428E-B87E-85DAE2BC07E6}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

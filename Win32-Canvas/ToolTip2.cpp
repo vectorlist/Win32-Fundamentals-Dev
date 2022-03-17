@@ -16,7 +16,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 #define WC_WINDOW	"WC_WINDOW"
 #define WC_CHILD	"WC_CHILD"
 #define WC_TOOLTIP	"WC_TOOLTIP"
-
+#include <string>
 struct Window
 {
 	HWND hwnd;
@@ -50,7 +50,7 @@ int main(int args, char argv[]) {
 	GetClassInfoEx(wc.hInstance, wc.lpszClassName, &wc);
 	RegisterClassEx(&wc);
 
-	//SuperClass ToolTip
+	//SuperClass Clone ToolTip
 	WNDCLASSEX ttwc = {};
 	ttwc.cbSize = sizeof(wc);
 	ttwc.lpszClassName = TOOLTIPS_CLASS;
@@ -64,6 +64,8 @@ int main(int args, char argv[]) {
 	if (RegisterClassEx(&ttwc)) {
 		printf("Registered %s class\n", ttwc.lpszClassName);
 	}
+	LPCSTR co = ttwc.lpszClassName;
+	std::wstring code(co, co + sizeof(co));
 
 	mainWindow.name = "main window";
 	mainWindow.br = CreateSolidBrush(RGB(45, 45, 45));
@@ -179,8 +181,6 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 				case CDDS_PREPAINT: {
 					printf("Notify CDDS_PREPAINT\n");
 					RECT fixedRc = rc;
-
-					//FillRect(dc, &fixedRc, tooltip.br);
 					SelectObject(dc, tooltip.br);
 					SelectObject(dc, (HPEN)GetStockObject(DC_PEN));
 					SetDCPenColor(dc, RGB(133, 133, 133));
@@ -190,7 +190,6 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 					SetBkMode(dc, TRANSPARENT);
 					SetTextColor(dc, RGB(220, 220, 220));
 					DrawText(dc, text, t.size(), &fixedRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-					//TextOut()
 					return CDRF_SKIPDEFAULT;
 				}
 				}
@@ -205,9 +204,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 				SelectObject(dc, font);
 				SIZE textSize{0};
 				GetTextExtentPoint32(dc, text, strlen(text), &textSize);
-
 				//SIZE textSize = GetMultiLineSize(tooltip.hwnd, text, 60);
-
 				RECT rc;
 				GetWindowRect(hdr->hwndFrom, &rc);
 				rc.right = rc.left + textSize.cx;
@@ -219,12 +216,9 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 				SendMessage(hdr->hwndFrom, TTM_ADJUSTRECT, TRUE, (LPARAM)&rc);
 				SetWindowPos(hdr->hwndFrom, NULL, rc.left, rc.top, w, h,
 					SWP_NOZORDER | SWP_NOACTIVATE);
-				return TRUE;
-				
+				return TRUE;	
 			}
 			}
-
-			
 		}
 		break;
 	}

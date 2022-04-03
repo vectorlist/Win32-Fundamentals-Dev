@@ -69,7 +69,7 @@ int main(int args, char* argv[])
 	swc.lpfnWndProc = WndProc;
 	
 	std::cout << LOG::ClassStyle(swc.style) << std::endl;
-
+	
 	//has aldreay new superclass if it failed
 	if (RegisterClassEx(&swc)) {
 		printf("registered new %s\n", swc.lpszClassName);

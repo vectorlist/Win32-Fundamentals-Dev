@@ -10,9 +10,9 @@
 #pragma comment(lib,"D2D1")
 #pragma comment(lib,"DWrite")
 
-struct D2DWindow
+struct Window
 {
-	ID2D1HwndRenderTarget *pRenterTaget;
+	ID2D1HwndRenderTarget *pRenterTaget = nullptr;
 	LPCSTR name;
 	HWND hwnd;
 };
@@ -25,7 +25,8 @@ struct Graphics
 };
 
 Graphics graphics;
-D2DWindow window;
+Window window;
+Window dxWindow;
 ID2D1SolidColorBrush* brush;
 ID2D1SolidColorBrush* txtBrush;
 
@@ -56,8 +57,13 @@ int main(int args, char* argv[])
 		
 	}
 
-	window.hwnd = CreateWindowEx(NULL, wc.lpszClassName, WC_WINDOW, WS_POPUP | WS_VISIBLE,
+	dxWindow.name = "D2D Window";
+	dxWindow.hwnd = CreateWindowEx(NULL, wc.lpszClassName, WC_WINDOW, WS_POPUP | WS_VISIBLE,
 		500, 200, 700, 300, nullptr, 0, wc.hInstance, &window);
+
+	//window.name = "GDI Window";
+	//window.hwnd = CreateWindowEx(NULL, wc.lpszClassName, WC_WINDOW, WS_POPUP | WS_VISIBLE,
+	//	500, 200, 700, 300, nullptr, 0, wc.hInstance, &window);
 
 	MSG msg{};
 	while (GetMessage(&msg, NULL, 0, 0))
@@ -69,7 +75,7 @@ int main(int args, char* argv[])
 }
 
 
-void CreateRenderTarget(D2DWindow* window) {
+void CreateRenderTarget(Window* window) {
 	if (window->pRenterTaget) return;
 	RECT rc;
 	GetClientRect(window->hwnd, &rc);
@@ -104,11 +110,11 @@ void CreateRenderTarget(D2DWindow* window) {
 }
 LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
-	D2DWindow* window = (D2DWindow*)GetWindowLong(hwnd, GWL_USERDATA);
+	Window* window = (Window*)GetWindowLong(hwnd, GWL_USERDATA);
 	switch (msg)
 	{
 	case WM_NCCREATE: {
-		window = (D2DWindow*)((LPCREATESTRUCT)lp)->lpCreateParams;
+		window = (Window*)((LPCREATESTRUCT)lp)->lpCreateParams;
 		assert(window);
 		window->hwnd = hwnd;
 		SetWindowLong(hwnd, GWL_USERDATA, (LONG)window);

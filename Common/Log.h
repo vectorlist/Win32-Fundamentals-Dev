@@ -12,6 +12,7 @@ namespace LOG
 	LPCSTR ClassStyle(UINT stlye);
 	LPCSTR WndMessage(UINT msg);
 	void LogWndMessage(UINT msg, UINT filterMsg);
+	void LogCtrlCustomDrawStage(LPARAM lp);
 	void LogLastError();
 };
 

@@ -158,26 +158,15 @@ int main(int args, char* argv[])
 	window.hwnd = CreateWindowEx(NULL, wc.lpszClassName, window.name,
 		WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN, 600, 200, 700, 480, nullptr, 0, wc.hInstance, &window);
 
-	struct  DlgItem : DLGTEMPLATE
-	{
-		WORD sysClass[2];
-		WORD lpClass[2];
-		WCHAR* lpTitle;
-	};
-	const char* code = "hello";
-	std::wstring wCode(code, code + sizeof(code));
-	//DlgItem item{ WS_POPUP | WS_VISIBLE, 0,20,20,200,100,"\0","\0",wCode };
-	
-	DlgTemplate dlgTemp("title", WS_VISIBLE  , 20, 20, 200, 100);
-	DlgTemplateEx dlgTempex(WS_VISIBLE | WS_POPUP, 20, 20, 200, 100, "\0", "\0", "titled");
-	DlgTemplateBase dlgT("hello", WS_VISIBLE, 20, 110, 200, 100);
-	dlgT.AddItem("second", WS_CHILD | WS_VISIBLE | WS_TABSTOP ,
-	0x0080, 0, 0, 20, 50, 1);
-	std::wstring s(L"title");
-	std::wstring ss(L"secend");
 
-	DialogTemplate temp(s.c_str(), 20, 20, 200, 100);
-	temp.button(ss.c_str(), 0, 0, 100, 40, 1);
+	DlgTemplateBase dlgT("title", WS_VISIBLE, 20, 20, 200, 100);
+	dlgT.AddItem("secend", WS_TABSTOP | WS_CHILD | WS_VISIBLE,
+	DlgTemplateBase::Button, 0, 0, 100, 40, 1);
+	//std::wstring s(L"title");
+	//std::wstring ss(L"secend");
+
+	//DialogTemplate temp(s.c_str(), 20, 20, 200, 100);
+	//temp.button(ss.c_str(), 0, 0, 100, 40, 1);
 
 	dlg.hwnd = CreateDialogIndirect(wc.hInstance, dlgT,
 		window.hwnd,(DLGPROC)DlgProc, (LONG)&dlg);
@@ -188,24 +177,7 @@ int main(int args, char* argv[])
 	ShowWindow(window.hwnd, TRUE);
 	//ShowWindow(dlg.hwnd, TRUE);
 
-	struct Test
-	{
-		int a;
-		BYTE b;
-		UINT c;
-	};
-
-	UINT8 buffer[24];
-
-	UINT size = sizeof(Test);
-	int a = 101;
-	memcpy_s(buffer, 24, &a, sizeof(a));
-	BYTE aa = 245;
-	memcpy_s(buffer + 4, 24, &aa, sizeof(aa));
-
-	Test* des = (Test*)buffer;
-
-	printf("des %d\n", des->a);
+	
 	
 	MSG msg{};
 	while (GetMessage(&msg, NULL, 0, 0))
@@ -234,7 +206,7 @@ INT_PTR WINAPI DlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case WM_INITDIALOG: {
 		printf("WM_INITDIALOG\n");
 		HINSTANCE inst = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
-		HWND button = CreateWindowEx(NULL, WC_BUTTON, "", WS_VISIBLE | WS_CHILD, 180, 150, 120, 30, hwnd,
+		HWND button = CreateWindowEx(NULL, WC_BUTTON, "", WS_VISIBLE | WS_CHILD, 180, 20, 120, 30, hwnd,
 			(HMENU)33, inst, NULL);
 		DWORD id = 0;
 		LRESULT res = SendMessage(button, DM_GETDEFID, 0, 0);
@@ -244,16 +216,32 @@ INT_PTR WINAPI DlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		printf("created button ID : %d\n", id);
 		id = GetWindowLongPtr(hwnd, GWLP_ID);
 		printf("created CTRL ID : %d\n", id);
+		HWND creations = (HWND)lp;
+		if (creations) {
+			printf("created creations\n", id);
+		}
 		break;
 	}
 	case WM_NOTIFY: {
-		HWND button = ((LPNMHDR)lp)->hwndFrom;
-		if (button) {
+		HWND ctrl = ((LPNMHDR)lp)->hwndFrom;
+		if (ctrl) {
+			UINT id = ((LPNMHDR)lp)->idFrom;
+			if (id == 1) {
+				LOG::LogWndMessage(msg, 0);
+				LOG::LogCtrlCustomDrawStage(lp);
+			}
 			NMCUSTOMDRAW* cd = (LPNMCUSTOMDRAW)(LPNMHDR)lp;
 			switch (cd->dwDrawStage)
 			{
+			case CDDS_ITEMPREPAINT: {
+
+				return CDRF_SKIPDEFAULT;
+			}
 			case CDDS_PREPAINT: {
-				printf("prepaint : %d\n", ((LPNMHDR)lp)->idFrom);
+				
+				
+				printf("prepaint : %d\n", id);
+				
 				HDC dc = cd->hdc;
 				RECT rc = cd->rc;
 				SetBkMode(dc, TRANSPARENT);
@@ -264,11 +252,12 @@ INT_PTR WINAPI DlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 				SelectObject(dc, pen);
 				Rectangle(dc, rc.left, rc.top, rc.right, rc.bottom);
 				
+				
 				SetTextColor(dc, RGB(220, 220, 220));
-				DrawText(dc, "&Close", -1, &cd->rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+				//DrawText(dc, "&Close", -1, &cd->rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 				DeleteObject(pen);
 				DeleteObject(br);
-				return CDRF_SKIPDEFAULT;
+				return CDRF_SKIPDEFAULT | CDRF_SKIPPOSTPAINT;
 				break;
 			}
 			case CDDS_POSTPAINT: {
@@ -276,6 +265,14 @@ INT_PTR WINAPI DlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 				//return CDRF_SKIPDEFAULT;
 				break;
 			}
+			case CDDS_PREERASE: {
+				HDC dc = cd->hdc;
+				RECT rc = cd->rc;
+				SetBkMode(dc, TRANSPARENT);
+				DrawFillRect(dc, rc, RGB(100, 100, 100));
+				return CDRF_SKIPDEFAULT;
+			}
+
 			default:
 				break;
 			}
@@ -296,6 +293,10 @@ INT_PTR WINAPI DlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		DrawFillRect(dc, ps.rcPaint, RGB(35, 35, 35));
 		EndPaint(hwnd, &ps);
+		break;
+	}
+	case WM_DRAWITEM: {
+		printf("drawitem\n");
 		break;
 	}
 	case WM_CLOSE: {

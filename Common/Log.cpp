@@ -1054,7 +1054,45 @@ LPCSTR LOG::WndMessage(UINT msg)
 
 void LOG::LogWndMessage(UINT msg, UINT filterMsg)
 {
+	printf("[%s]\n", WndMessage(msg));
+}
 
+void LOG::LogCtrlCustomDrawStage(LPARAM lp)
+{
+	NMCUSTOMDRAW* cd = (LPNMCUSTOMDRAW)(LPNMHDR)lp;
+	DWORD stage = cd->dwDrawStage;
+	static std::basic_string<TCHAR> code;
+	code.clear();
+	std::vector<std::string> list;
+	if (stage & CDDS_PREPAINT)
+		list.emplace_back("CDDS_PREPAINT");
+	if (stage & CDDS_POSTPAINT)
+		list.emplace_back("CDDS_POSTPAINT");
+	if (stage & CDDS_PREERASE)
+		list.emplace_back("CDDS_PREERASE");
+	if (stage & CDDS_POSTERASE)
+		list.emplace_back("CDDS_POSTERASE");
+	if (stage & CDDS_ITEM)
+		list.emplace_back("CDDS_ITEM");
+	if (stage & CDDS_ITEMPREPAINT)
+		list.emplace_back("CDDS_ITEMPREPAINT");
+	if (stage & CDDS_ITEMPOSTPAINT)
+		list.emplace_back("CDDS_ITEMPOSTPAINT");
+	if (stage & CDDS_ITEMPREERASE)
+		list.emplace_back("CDDS_ITEMPREERASE");
+	if (stage & CDDS_ITEMPOSTERASE)
+		list.emplace_back("CDDS_ITEMPOSTERASE");
+	if (stage & CDDS_SUBITEM)
+		list.emplace_back("CDDS_SUBITEM");
+
+
+	for (int i = 0; i < list.size(); i++) {
+		if (i + 1 == list.size())
+			code.append(list[i]);
+		else
+			code.append(list[i]).append(" | ");
+	}
+	printf("[%s]\n",code.c_str());
 }
 
 void LOG::LogLastError() {

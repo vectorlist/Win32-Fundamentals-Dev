@@ -23,7 +23,7 @@ DlgTemplateBase::DlgTemplateBase(LPCSTR title, UINT style, UINT x, UINT y, UINT 
 
 
 	AppendString(title);
-	WORD size = 8;
+	WORD size = 10;
 	AppendByte(&size, sizeof(size));
 	LPCSTR font = "Segoe UI";
 	AppendString(font);
@@ -40,8 +40,8 @@ BOOL DlgTemplateBase::AddItem(LPCSTR text, DWORD style, WORD ctrl, UINT x, UINT 
 	info.cx = cx;
 	info.cy = cy;
 	info.id = id;
-	info.ctrlType = 0xFFFF;
-	info.ctrl = ctrl;
+	info.ctrl[0] = 0xFFFF;
+	info.ctrl[1] = ctrl;
 
 	//the DLGITEMTEMPLATE structure must be aligned on DWORD(4byte) boundary
 	UINT size = sizeof(DWORD);
@@ -60,7 +60,10 @@ BOOL DlgTemplateBase::AddItem(LPCSTR text, DWORD style, WORD ctrl, UINT x, UINT 
 	DLGTEMPLATE* pDlgTemplate = (LPDLGTEMPLATE)&m_pBuffer;
 	pDlgTemplate->cdit++;
 
-
+	DLGItem item;
+	item.hwnd = nullptr;
+	item.id = id;
+	m_items.emplace_back(item);
 	return 0;
 }
 

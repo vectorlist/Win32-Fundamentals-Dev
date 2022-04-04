@@ -122,7 +122,6 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 //#pragma pack(pop)    
 
 #include <DlgTemplate.h>
-#include <dlg.h>
 
 LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 INT_PTR WINAPI DlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
@@ -159,8 +158,8 @@ int main(int args, char* argv[])
 		WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN, 600, 200, 700, 480, nullptr, 0, wc.hInstance, &window);
 
 
-	DlgTemplateBase dlgT("title", WS_VISIBLE, 20, 20, 200, 100);
-	dlgT.AddItem("secend", WS_TABSTOP | WS_CHILD | WS_VISIBLE,
+	DlgTemplateBase dlgBase("title", WS_VISIBLE, 20, 20, 200, 100);
+	dlgBase.AddItem("secend", WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
 	DlgTemplateBase::Button, 0, 0, 100, 40, 1);
 	//std::wstring s(L"title");
 	//std::wstring ss(L"secend");
@@ -168,8 +167,8 @@ int main(int args, char* argv[])
 	//DialogTemplate temp(s.c_str(), 20, 20, 200, 100);
 	//temp.button(ss.c_str(), 0, 0, 100, 40, 1);
 
-	dlg.hwnd = CreateDialogIndirect(wc.hInstance, dlgT,
-		window.hwnd,(DLGPROC)DlgProc, (LONG)&dlg);
+	dlg.hwnd = CreateDialogIndirect(wc.hInstance, dlgBase,
+		window.hwnd,(DLGPROC)DlgProc, (LONG)&dlgBase);
 
 	//DialogBoxIndirect(wc.hInstance, dlgTemp.mData, window.hwnd, (DLGPROC)DlgProc);
 	DWORD err = GetLastError();
@@ -193,7 +192,51 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
 	return DefWindowProc(hwnd, msg, wp, lp);
 }
+LRESULT WINAPI SubClassDlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR id, DWORD_PTR data) {
+	switch (msg)
+	{
+	case WM_PAINT: {
+		PAINTSTRUCT ps{};
+		HDC dc = BeginPaint(hwnd, &ps);
+		RECT rc;
+		GetClientRect(hwnd, &rc);
+		
+		SetBkMode(dc, TRANSPARENT);
+		DrawFillRect(dc, rc, RGB(100, 100, 100));
+		auto pen = CreatePen(PS_SOLID, 1, RGB(20, 20, 20));
+		auto br = CreateSolidBrush(RGB(65, 65, 65));
+		SelectObject(dc, br);
+		SelectObject(dc, pen);
+		Rectangle(dc, rc.left, rc.top, rc.right, rc.bottom);
 
+
+		SetTextColor(dc, RGB(220, 220, 220));
+		DrawText(dc, "&Close", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		DeleteObject(pen);
+		DeleteObject(br);
+		EndPaint(hwnd, &ps);
+		return 0;
+	}
+	}
+	return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
+void PaintContorl(HDC dc, const RECT& rc)
+{
+	SetBkMode(dc, TRANSPARENT);
+	DrawFillRect(dc, rc, RGB(100, 100, 100));
+	auto pen = CreatePen(PS_SOLID, 1, RGB(20, 20, 20));
+	auto br = CreateSolidBrush(RGB(65, 65, 65));
+	SelectObject(dc, br);
+	SelectObject(dc, pen);
+	Rectangle(dc, rc.left, rc.top, rc.right, rc.bottom);
+
+
+	SetTextColor(dc, RGB(220, 220, 220));
+	DrawText(dc, "&Close", -1, (LPRECT)&rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	DeleteObject(pen);
+	DeleteObject(br);
+}
 INT_PTR WINAPI DlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
 	//printf("message : %s\n", LOG::WndMessage(msg));
@@ -206,71 +249,44 @@ INT_PTR WINAPI DlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case WM_INITDIALOG: {
 		printf("WM_INITDIALOG\n");
 		HINSTANCE inst = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
-		HWND button = CreateWindowEx(NULL, WC_BUTTON, "", WS_VISIBLE | WS_CHILD, 180, 20, 120, 30, hwnd,
+		HWND button = CreateWindowEx(NULL, WC_BUTTON, "", WS_VISIBLE | WS_CHILD,
+			180, 20, 120, 30, hwnd,
 			(HMENU)33, inst, NULL);
 		DWORD id = 0;
-		LRESULT res = SendMessage(button, DM_GETDEFID, 0, 0);
-		if (DC_HASDEFID == HIWORD(res)) {
-			id = LOWORD(res);
-		}
-		printf("created button ID : %d\n", id);
-		id = GetWindowLongPtr(hwnd, GWLP_ID);
-		printf("created CTRL ID : %d\n", id);
-		HWND creations = (HWND)lp;
-		if (creations) {
-			printf("created creations\n", id);
-		}
+		DlgTemplateBase* base = (DlgTemplateBase*)lp;
+
+		//UINT size = base->m_items.size();
 		break;
 	}
 	case WM_NOTIFY: {
 		HWND ctrl = ((LPNMHDR)lp)->hwndFrom;
 		if (ctrl) {
-			UINT id = ((LPNMHDR)lp)->idFrom;
+			LPNMHDR hdr = ((LPNMHDR)lp);
+			UINT id = hdr->idFrom;
 			if (id == 1) {
-				LOG::LogWndMessage(msg, 0);
-				LOG::LogCtrlCustomDrawStage(lp);
+				//LOG::LogWndMessage(msg, 0);
+				//LOG::LogCtrlCustomDrawStage(lp);
 			}
 			NMCUSTOMDRAW* cd = (LPNMCUSTOMDRAW)(LPNMHDR)lp;
 			switch (cd->dwDrawStage)
 			{
 			case CDDS_ITEMPREPAINT: {
-
+				
 				return CDRF_SKIPDEFAULT;
 			}
 			case CDDS_PREPAINT: {
-				
-				
-				printf("prepaint : %d\n", id);
-				
-				HDC dc = cd->hdc;
-				RECT rc = cd->rc;
-				SetBkMode(dc, TRANSPARENT);
-				DrawFillRect(dc, rc, RGB(100, 100, 100));
-				auto pen = CreatePen(PS_SOLID, 1, RGB(20, 20, 20));
-				auto br = CreateSolidBrush(RGB(65, 65, 65));
-				SelectObject(dc, br);
-				SelectObject(dc, pen);
-				Rectangle(dc, rc.left, rc.top, rc.right, rc.bottom);
-				
-				
-				SetTextColor(dc, RGB(220, 220, 220));
-				//DrawText(dc, "&Close", -1, &cd->rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-				DeleteObject(pen);
-				DeleteObject(br);
-				return CDRF_SKIPDEFAULT | CDRF_SKIPPOSTPAINT;
+				PaintContorl(cd->hdc, cd->rc);
+
+				return CDRF_SKIPDEFAULT | CDRF_SKIPPOSTPAINT | CDRF_NOTIFYPOSTPAINT;
 				break;
 			}
 			case CDDS_POSTPAINT: {
-
-				//return CDRF_SKIPDEFAULT;
+				
 				break;
 			}
 			case CDDS_PREERASE: {
-				HDC dc = cd->hdc;
-				RECT rc = cd->rc;
-				SetBkMode(dc, TRANSPARENT);
-				DrawFillRect(dc, rc, RGB(100, 100, 100));
-				return CDRF_SKIPDEFAULT;
+				
+				return CDRF_SKIPDEFAULT | CDRF_SKIPPOSTPAINT;
 			}
 
 			default:
@@ -283,6 +299,7 @@ INT_PTR WINAPI DlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case WM_SETFONT: {
 		RECT rc;
 		GetClientRect(hwnd, &rc);
+		printf("WM_FONT\n");
 		ShowWindow(hwnd, SW_SHOW);
 		break;
 	}
@@ -297,6 +314,8 @@ INT_PTR WINAPI DlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	}
 	case WM_DRAWITEM: {
 		printf("drawitem\n");
+		LPDRAWITEMSTRUCT dis = (LPDRAWITEMSTRUCT)lp;
+		PaintContorl(dis->hDC, dis->rcItem);
 		break;
 	}
 	case WM_CLOSE: {
@@ -306,7 +325,7 @@ INT_PTR WINAPI DlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case WM_NCHITTEST: {
 		HRESULT hit = DefWindowProc(hwnd, msg, wp, lp);
 		if (hit == HTCLIENT) {
-			//return HTCAPTION;
+			return HTCAPTION;
 		}
 		break;
 	}

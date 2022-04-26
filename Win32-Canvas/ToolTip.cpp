@@ -9,6 +9,8 @@
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
 processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
+#include <../Common/Wnd32.h>
+
 #define WC_WINDOW	"WC_WINDOW"
 #define WC_CHILD	"WC_CHILD"
 #define WC_TOOLTIP	"WC_TOOLTIP"
@@ -260,7 +262,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		LOGBRUSH lbr;
 		GetObject(wnd->br, sizeof(LOGBRUSH), &lbr);
 		COLORREF clr = lbr.lbColor;
-		DrawFillRect(dc, ps.rcPaint, clr);
+		Wnd32::DrawFillRect(dc, ps.rcPaint, clr);
 
 		EndPaint(hwnd, &ps);
 		break;

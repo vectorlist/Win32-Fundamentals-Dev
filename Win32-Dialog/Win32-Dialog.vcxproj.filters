@@ -10,17 +10,11 @@
     <ClCompile Include="Dialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\Log.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DlgTemplate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Common\Log.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="DlgTemplate.h">
       <Filter>Source Files</Filter>
     </ClInclude>

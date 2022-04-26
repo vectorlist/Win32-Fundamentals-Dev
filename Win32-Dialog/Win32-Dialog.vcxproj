@@ -127,12 +127,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\Common\Log.cpp" />
     <ClCompile Include="Dialog.cpp" />
     <ClCompile Include="DlgTemplate.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Common\Log.h" />
     <ClInclude Include="DlgTemplate.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -11,7 +11,7 @@ name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
 processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #include <../Common/Log.h>
-#include <../common.h>
+#include <../Common/Wnd32.h>
 
 #define WC_WINDOW	"WC_WINDOW"
 #define WC_CHILD	"WC_CHILD"
@@ -158,14 +158,13 @@ int main(int args, char* argv[])
 		WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN, 600, 200, 700, 480, nullptr, 0, wc.hInstance, &window);
 
 
-	DlgTemplateBase dlgBase("Memory Dialog", WS_VISIBLE, 20, 20, 200, 100);
+	DlgTemplateBase dlgBase("Memory Dialog", WS_VISIBLE | WS_POPUPWINDOW, 20, 20, 200, 100);
 	dlgBase.AddItem("Memory Ctrl", WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
 	DlgTemplateBase::Button, 0, 0, 100, 40, 1);
 
 	dlg.hwnd = CreateDialogIndirect(wc.hInstance, dlgBase,
 		window.hwnd,(DLGPROC)DlgProc, (LONG)&dlgBase);
 
-	DWORD err = GetLastError();
 	LOG::LogLastError();
 	ShowWindow(window.hwnd, TRUE);
 	//ShowWindow(dlg.hwnd, TRUE);
@@ -232,29 +231,7 @@ INT_PTR WINAPI DlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		//UINT size = base->m_items.size();
 		break;
 	}
-	case WM_NOTIFY: {
-		HWND ctrl = ((LPNMHDR)lp)->hwndFrom;
-		if (ctrl) {
-			LPNMHDR hdr = ((LPNMHDR)lp);
-			UINT id = hdr->idFrom;
-			NMCUSTOMDRAW* cd = (LPNMCUSTOMDRAW)(LPNMHDR)lp;
-			switch (cd->dwDrawStage)
-			{
 
-			case CDDS_PREPAINT: {
-				PaintContorl(hdr->hwndFrom,cd->hdc, cd->rc);
-
-				//return CDRF_SKIPDEFAULT | CDRF_SKIPPOSTPAINT;
-				return true;
-				break;
-			}
-			default:
-				break;
-			}
-
-		}
-		break;
-	}
 	case WM_SETFONT: {
 		RECT rc;
 		GetClientRect(hwnd, &rc);
@@ -263,11 +240,11 @@ INT_PTR WINAPI DlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		break;
 	}
 	case WM_PAINT: {
-		printf("WM_PAINT\n");
+		printf("WM_PAINT %s\n", Wnd32::GetHwndText(hwnd));
 		PAINTSTRUCT ps{};
 		HDC dc = BeginPaint(hwnd, &ps);
 
-		DrawFillRect(dc, ps.rcPaint, RGB(35, 35, 35));
+		Wnd32::DrawFillRect(dc, ps.rcPaint, RGB(35, 35, 35));
 		EndPaint(hwnd, &ps);
 		break;
 	}

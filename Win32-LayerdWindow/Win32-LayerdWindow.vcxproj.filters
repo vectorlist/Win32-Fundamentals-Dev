@@ -7,7 +7,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SuperClass.cpp">
+    <ClCompile Include="LayerWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LayerWindow2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -10,6 +10,7 @@
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
 processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
+#include <../Common/Wnd32.h>
 #define WC_WINDOW	"WC_WINDOW"
 #define WC_CHILD	"WC_CHILD"
 LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
@@ -20,9 +21,18 @@ struct WindowData
 	HWND hwnd;
 	LPCSTR name;
 };
+#define BACK_BUFFER		0
+#define FRONT_BUFFER	1
+#define CLIENT_DC		0
+#define MEMORY_DC		1
+struct SwapChain{
+	HBITMAP buffer[2];
+	HDC dc[2];
+};
 
 WindowData window;
 WindowData child;
+SwapChain pSc;
 
 
 int main(int args, char* argv[])
@@ -49,7 +59,12 @@ int main(int args, char* argv[])
 	RegisterClassEx(&wc);
 	child.name = "Child Window";
 	child.hwnd = CreateWindowEx(NULL, wc.lpszClassName, window.name,
-		WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN, 120, 100, 400, 200, window.hwnd, 0, wc.hInstance, &child);
+		WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN, 120, 100, 200, 100, 
+		window.hwnd, 0, wc.hInstance, &child);
+
+	CreateWindowEx(NULL, wc.lpszClassName, "Second",
+		WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN, 250, 100, 200, 200,
+		window.hwnd, 0, wc.hInstance, &child);
 
 	ShowWindow(window.hwnd, TRUE);
 
@@ -100,25 +115,44 @@ void PaintDoubleBuffer(WindowData* wnd, PAINTSTRUCT& ps) {
 	DeleteDC(memDc);
 
 }
+void ClearSwapChain(HWND hwnd, SwapChain* sc);
+void SetSwapChain(HWND hwnd, SwapChain* sc, size_t w, size_t h) {
+	ClearSwapChain(hwnd, sc);
+	HDC dc = GetDC(hwnd);
+	HDC memDc = CreateCompatibleDC(dc);
+	HBITMAP front = CreateCompatibleBitmap(dc, w, h);
+	HBITMAP back = CreateCompatibleBitmap(dc, w, h);
+	sc->buffer[BACK_BUFFER] = back;
+	sc->buffer[FRONT_BUFFER] = front;
+	sc->dc[CLIENT_DC] = dc;
+	sc->dc[MEMORY_DC] = memDc;
+	GetMapMode(memDc);
 
-void MapToParent(HWND hwnd, POINT in) {
-	RECT rc[2];
-	HWND parent = GetParent(hwnd);
-	GetWindowRect(parent, &rc[0]);
-	GetWindowRect(hwnd, &rc[1]);
-
-	POINT offset{ rc[0].left - rc[1].left, rc[0].top - rc[1].top };
-	printf("offset %d %d\n", offset.x, offset.y);
+	SelectObject(memDc, back);
+	
 }
 
-RECT MapToParentRect(HWND hwnd) {
+void ClearSwapChain(HWND hwnd, SwapChain* sc) {
+	DeleteObject(sc->buffer[0]);
+	DeleteObject(sc->buffer[1]);
+	ReleaseDC(hwnd, sc->dc[0]);
+	DeleteDC(sc->dc[1]);
+}
+
+void DoPaint(SwapChain* sc, HWND hwnd) {
 	RECT rc;
-	GetWindowRect(hwnd, &rc);
-	::MapWindowPoints(HWND_DESKTOP, GetParent(hwnd), (LPPOINT)&rc, 2);
-	return rc;
+	GetClientRect(hwnd, &rc);
+	Wnd32::DrawFillRect(sc->dc[1], rc, RGB(100, 0, 0));
 }
 
-POINT pos[2] = { 0 };
+void UpdateSwapChain(SwapChain* sc, const RECT& rc) {
+	BitBlt(sc->dc[0], rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
+		sc->dc[1], 0, 0, SRCCOPY);
+	HBITMAP swapBuffer = sc->buffer[FRONT_BUFFER];
+	sc->buffer[FRONT_BUFFER] = sc->buffer[BACK_BUFFER];
+	sc->buffer[BACK_BUFFER] = swapBuffer;
+	(HBITMAP)SelectObject(sc->dc[MEMORY_DC], sc->buffer[FRONT_BUFFER]);
+}
 
 LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -139,91 +173,25 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	}
 	case WM_PAINT: {
 		if (wnd == &window) break;
-		//printf("[WM_PAINT] %s\n", wnd->name);
-		PAINTSTRUCT ps{};
-		HDC dc = BeginPaint(hwnd, &ps);
-		PaintDoubleBuffer(wnd, ps);
-		//Paint(dc, ps);
-		EndPaint(hwnd, &ps);
+		printf("[WM_PAINT] %s\n", wnd->name);
+		//PAINTSTRUCT ps{};
+		//HDC dc = BeginPaint(hwnd, &ps);
+		DoPaint(&pSc, hwnd);
+		RECT rc;
+		GetClientRect(hwnd, &rc);
+		UpdateSwapChain(&pSc, rc);
+		//EndPaint(hwnd, &ps);
+		break;
+	}
+	case WM_SIZE: {
+		if (wnd == &window) break;
+		printf("WM_SIZE %s\n", Wnd32::GetHwndText(hwnd));
+		SetSwapChain(hwnd, &pSc, LOWORD(lp), HIWORD(lp));
+		//InvalidateRect(hwnd, NULL, FALSE);
 		break;
 	}
 	case WM_LBUTTONDOWN: {
-		if (wnd == &window) break;
-		GetCursorPos(&pos[0]);
-		ScreenToClient(GetParent(hwnd), &pos[0]);
-		printf("Last Pos : %d %d\n", pos[0].x, pos[0].y);
-		//SetCapture(hwnd);
-		moveAble = TRUE;
-		break;
-	}
-	case WM_LBUTTONUP: {
-		if (wnd == &window) break;
-		GetCursorPos(&pos[1]);
-		
-		printf("New Pos : %d %d\n", pos[1].x, pos[1].y);
-		//ReleaseCapture();
-		moveAble = FALSE;
 		InvalidateRect(hwnd, NULL, FALSE);
-		break;
-	}
-	case WM_MOUSEMOVE: {
-		//if (wnd == &window) break;
-		POINT curPos{ LOWORD(lp), HIWORD(lp) };
-		//ClientToScreen(hwnd, &curPos);
-		printf("Position \n");
-		if ((wnd == &child)) {
-			//if (!moveAble) break;
-			if (wp != VK_LBUTTON) {
-				//printf("BK_LBUTTON\n");
-				break;
-			}
-			POINT offset;
-			POINT clientPos;
-			GetCursorPos(&clientPos);
-
-			POINT parentCoord = clientPos;
-			ScreenToClient(GetParent(hwnd), &parentCoord);
-			ScreenToClient(hwnd, &clientPos);
-
-			POINT oriPos = pos[0];
-			int x,y;
-			x = oriPos.x;
-			y = oriPos.y;
-			//if (oriPos.x < parentCoord.x) {
-			//	x -= parentCoord.x;
-			//}
-			//else {
-			//	x -= parentCoord.x;
-			//}
-			x -= parentCoord.x;
-			y -= parentCoord.y;
-
-			//RECT rc = MapToParentRect(hwnd);
-			RECT rc;
-			GetClientRect(hwnd, &rc);
-
-			OffsetRect(&rc, -x, -y);
-			printf("ori %d client %d offset %d\n", oriPos.x, parentCoord.x, -x);
-			//printf("parent map %d %d\n", x, pos[0].y);
-			
-
-			//MoveWindow(hwnd, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
-			//SetWindowPos(hwnd, 0, rc.left, rc.top, 0, 0, SWP_NOSIZE | SWP_FRAMECHANGED);
-			//UpdateWindow(hwnd);
-			//InvalidateRect(hwnd, NULL, TRUE);
-		}
-		break;
-	}
-	case WM_NCHITTEST: {
-		if (wnd == &child) {
-			InvalidateRect(hwnd, NULL, FALSE);
-			if (GetAsyncKeyState(VK_CONTROL) & 0x8000) {
-				return HTCAPTION;
-			}
-			
-		}
-			
-		break;
 	}
 	}
 

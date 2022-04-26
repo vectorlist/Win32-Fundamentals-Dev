@@ -11,6 +11,8 @@
 #pragma comment(linker, "\"/manifestdependency:type='win32' \
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
 processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+#include <../Common/Log.h>
+#include <../Common/Wnd32.h>
 
 #define WC_WINDOW	"WC_WINDOW"
 #define WC_CHILD	"WC_CHILD"
@@ -18,6 +20,7 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #define CUSTOMDRAW_BUTTON	1
 #define ITEMDRAW_BUTTON		2
 LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+LRESULT WINAPI SubClassProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR id, DWORD_PTR data);
 
 HWND mainHwnd;
 
@@ -58,15 +61,19 @@ int main(int args, char* argv[])
 
 	button[0] = CreateWindowEx(NULL, WC_BUTTON, "Normal Draw", 
 		WS_VISIBLE | WS_CHILD | WS_CLIPCHILDREN,
-		140, 30, 120, 38, mainHwnd, (HMENU)0, hInst, NULL);
+		130, 30, 120, 38, mainHwnd, (HMENU)0, hInst, NULL);
+
+	SetWindowSubclass(button[0], SubClassProc, 0, 0);
 
 	button[1] = CreateWindowEx(NULL, WC_BUTTON, "Custom Draw",
 		WS_VISIBLE | WS_CHILD,
-		300, 30, 120, 38, mainHwnd, (HMENU)1, hInst, NULL);
+		290, 30, 120, 38, mainHwnd, (HMENU)1, hInst, NULL);
 
-	button[2] = CreateWindowEx(NULL, WC_BUTTON, "Item Draw", 
+	button[2] = CreateWindowEx(NULL, WC_BUTTON, "Owner Draw", 
 		WS_VISIBLE | WS_CHILD | BS_OWNERDRAW,
-		460, 30, 120, 38, mainHwnd, (HMENU)2, hInst, NULL);
+		450, 30, 120, 38, mainHwnd, (HMENU)2, hInst, NULL);
+
+	
 
 	ShowWindow(mainHwnd, TRUE);
 	InvalidateRect(mainHwnd, NULL, FALSE);
@@ -79,14 +86,6 @@ int main(int args, char* argv[])
 	return msg.lParam;
 }
 
-LPCSTR GetHwndText(HWND hwnd) {
-	static std::basic_string<TCHAR> temp;
-	auto len = GetWindowTextLength(hwnd);
-	temp.reserve(len + 1);
-	GetWindowText(hwnd, (LPSTR)temp.c_str(), len + 1);
-	return temp.c_str();
-}
-
 void DrawButton(HWND hwnd, HDC dc, LPRECT rc) {
 	HGDIOBJ oldObj[3];
 	for(int i = 0; i < 3; i ++)
@@ -95,7 +94,7 @@ void DrawButton(HWND hwnd, HDC dc, LPRECT rc) {
 	Rectangle(dc, rc->left, rc->top, rc->right, rc->bottom);
 	SetBkMode(dc, TRANSPARENT);
 	SetTextColor(dc, RGB(220, 220, 220));
-	DrawText(dc, GetHwndText(hwnd), -1, rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	DrawText(dc, Wnd32::GetHwndText(hwnd), -1, rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 	for (int i = 0; i < 3; i++)
 		SelectObject(dc, oldObj[i]);
 }
@@ -109,30 +108,14 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		LPNMHDR hdr = (LPNMHDR)lp;
 		if (hdr->hwndFrom != button[CUSTOMDRAW_BUTTON]) break;
 		LPNMCUSTOMDRAW lpCd = (LPNMCUSTOMDRAW)lp;
-
 		switch (lpCd->dwDrawStage)
 		{
 		case CDDS_PREPAINT: {
+			
 			DrawButton(hdr->hwndFrom, lpCd->hdc, &lpCd->rc);
 			return CDRF_SKIPDEFAULT | CDRF_SKIPPOSTPAINT;
 		}
 		}
-	}
-	case WM_PAINT: {
-		HWND foundHwnd = GetWindow(hwnd, GW_CHILD);
-		while (foundHwnd != NULL){
-			if (foundHwnd == button[NORMAL_BUTTON]) {
-				printf("Find out %s\n", GetHwndText(foundHwnd));
-				break;
-			}
-			foundHwnd = GetNextWindow(foundHwnd, GW_HWNDNEXT);
-		}
-		if (!foundHwnd) break;
-		PAINTSTRUCT ps{};
-		HDC dc = BeginPaint(foundHwnd, &ps);
-		DrawButton(foundHwnd, dc, &ps.rcPaint);
-		EndPaint(foundHwnd, &ps);
-		break;
 	}
 	case WM_DRAWITEM: {
 		DRAWITEMSTRUCT* dis = (LPDRAWITEMSTRUCT)lp;
@@ -143,4 +126,24 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	}
 	}
 	return DefWindowProc(hwnd, msg, wp, lp);
+}
+
+LRESULT WINAPI SubClassProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR id, DWORD_PTR data)
+{
+	
+	switch (msg)
+	{
+	case WM_PAINT: {
+		PAINTSTRUCT ps{};
+		HDC dc = BeginPaint(hwnd, &ps);
+		DrawButton(hwnd, dc, &ps.rcPaint);
+		EndPaint(hwnd, &ps);
+		return TRUE;
+		break;
+	}
+	case WM_CLOSE: {
+		RemoveWindowSubclass(hwnd, SubClassProc, 0);
+	}
+	}
+	return DefSubclassProc(hwnd, msg, wp, lp);
 }

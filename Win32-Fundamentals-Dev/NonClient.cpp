@@ -129,7 +129,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case WM_LBUTTONDOWN:
 	{
 		POINT pos{ LOWORD(lp), HIWORD(lp) };
-		printf("hmm");
+		printf("WM_LBUTTONDOWN\n");
 		//RedrawWindow(hwnd, NULL, NULL, RDW_UPDATENOW);
 		//RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
 	

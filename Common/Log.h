@@ -1102,7 +1102,7 @@ inline void LOG::LogCtrlCustomDrawStage(LPARAM lp)
 		list.emplace_back("CDDS_SUBITEM");
 
 
-	for (int i = 0; i < list.size(); i++) {
+	for (size_t i = 0; i < list.size(); i++) {
 		if (i + 1 == list.size())
 			code.append(list[i]);
 		else

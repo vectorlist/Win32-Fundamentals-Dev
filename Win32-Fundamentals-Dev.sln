@@ -33,6 +33,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Win32-DrawType", "Win32-Dra
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Win32-LayerdWindow", "Win32-LayerdWindow\Win32-LayerdWindow.vcxproj", "{61588906-FDF4-4CD1-B1B8-877C5F7F1350}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Win32-Edit", "Win32-Edit\Win32-Edit.vcxproj", "{0E494017-6A62-4659-8037-FC4BD7E61B2F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -137,6 +139,14 @@ Global
 		{61588906-FDF4-4CD1-B1B8-877C5F7F1350}.Release|x64.Build.0 = Release|x64
 		{61588906-FDF4-4CD1-B1B8-877C5F7F1350}.Release|x86.ActiveCfg = Release|Win32
 		{61588906-FDF4-4CD1-B1B8-877C5F7F1350}.Release|x86.Build.0 = Release|Win32
+		{0E494017-6A62-4659-8037-FC4BD7E61B2F}.Debug|x64.ActiveCfg = Debug|x64
+		{0E494017-6A62-4659-8037-FC4BD7E61B2F}.Debug|x64.Build.0 = Debug|x64
+		{0E494017-6A62-4659-8037-FC4BD7E61B2F}.Debug|x86.ActiveCfg = Debug|Win32
+		{0E494017-6A62-4659-8037-FC4BD7E61B2F}.Debug|x86.Build.0 = Debug|Win32
+		{0E494017-6A62-4659-8037-FC4BD7E61B2F}.Release|x64.ActiveCfg = Release|x64
+		{0E494017-6A62-4659-8037-FC4BD7E61B2F}.Release|x64.Build.0 = Release|x64
+		{0E494017-6A62-4659-8037-FC4BD7E61B2F}.Release|x86.ActiveCfg = Release|Win32
+		{0E494017-6A62-4659-8037-FC4BD7E61B2F}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

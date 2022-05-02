@@ -52,7 +52,7 @@ int main(int args, char* argv[]) {
 
 	wnd[0] = CreateWindowEx(WS_EX_LAYERED 
 		, wc.lpszClassName, wc.lpszClassName, WS_VISIBLE | WS_POPUP,
-		600, 200, 780, 480, NULL, 0, hInst, 0);
+		600, 200, image[0]->GetWidth(), image[0]->GetHeight(), NULL, 0, hInst, 0);
 
 	wnd[1] = CreateWindowEx(
 		NULL,

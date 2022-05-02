@@ -32,7 +32,7 @@ namespace Wnd32 {
 	inline BOOL GetChildHwndList(HWND src, UINT size, HWND* dst) {
 		HWND child = GetWindow(src, GW_CHILD);
 		if (!child) return FALSE;
-		for (int i = 0; i < size; i++) {
+		for (size_t i = 0; i < size; i++) {
 			dst[i] = child;
 			child = GetNextWindow(child, GW_HWNDNEXT);
 		}
@@ -41,9 +41,9 @@ namespace Wnd32 {
 
 	inline LPCSTR GetHwndText(HWND hwnd) {
 		static std::basic_string<TCHAR> temp;
-		auto len = GetWindowTextLength(hwnd);
-		temp.reserve(len + 1);
-		GetWindowText(hwnd, (LPSTR)temp.c_str(), len + 1);
+		auto len = GetWindowTextLength(hwnd) + 1;
+		temp.reserve(len);
+		GetWindowText(hwnd, (LPSTR)temp.c_str(), len);
 		return temp.c_str();
 	}
 
@@ -53,5 +53,25 @@ namespace Wnd32 {
 		MapWindowPoints(HWND_DESKTOP, GetParent(hwnd), (LPPOINT)&rc, 2);
 		return rc;
 	}
-
 }
+
+struct GdiObj
+{
+	GdiObj() : obj(nullptr) {}
+	virtual~GdiObj() { if (obj) DeleteObject(obj); }
+	HGDIOBJ obj;
+};
+
+struct Brush : GdiObj{
+	Brush(COLORREF col) : GdiObj() {
+		obj = CreateSolidBrush(col);
+	}
+	operator HBRUSH() { return (HBRUSH)obj; }
+};
+
+struct Pen : GdiObj {
+	Pen(int width, COLORREF col) : GdiObj() {
+		obj = CreatePen(PS_SOLID, width, col);
+	}
+	operator HPEN() { return (HPEN)obj; }
+};

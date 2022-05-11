@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <Richedit.h>
 
 #define NUMCHAR(x) (sizeof(x)/ sizeof(x)[0])
 
@@ -17,6 +18,7 @@ namespace LOG
 	void LogWndMessage(UINT msg, UINT filterMsg);
 	void LogCtrlCustomDrawStage(LPARAM lp);
 	void LogLastError();
+	void LogCharFormat2(const CHARFORMAT2& cf);
 };
 
 inline LPCSTR LOG::ClassStyle(UINT style)
@@ -1127,4 +1129,56 @@ inline void LOG::LogLastError() {
 	OutputDebugString(code.c_str());
 	LocalFree(lpBuf);
 
+}
+
+void LOG::LogCharFormat2(const CHARFORMAT2& cf)
+{
+	static std::string temp;
+	temp.clear();
+	std::string mask;
+	std::string effect;
+
+	if (cf.dwMask & CFM_ALL) mask.append("[CFM_ALL]");
+	if (cf.dwMask & CFM_BOLD) mask.append("[CFM_BOLD]");
+	if (cf.dwMask & CFM_CHARSET) mask.append("[CFM_CHARSET]");
+	if (cf.dwMask & CFM_COLOR) mask.append("[CFM_COLOR]");
+	if (cf.dwMask & CFM_EFFECTS) mask.append("[CFM_EFFECTS]");
+	if (cf.dwMask & CFM_FACE) mask.append("[CFM_FACE]");
+	if (cf.dwMask & CFM_ITALIC) mask.append("[CFM_ITALIC]");
+	if (cf.dwMask & CFM_OFFSET) mask.append("[CFM_OFFSET]");
+	if (cf.dwMask & CFM_PROTECTED) mask.append("[CFM_PROTECTED]");
+	if (cf.dwMask & CFM_SIZE) mask.append("[CFM_SIZE]");
+	if (cf.dwMask & CFM_STRIKEOUT) mask.append("[CFM_STRIKEOUT]");
+	if (cf.dwMask & CFM_UNDERLINE) mask.append("[CFM_UNDERLINE]");
+
+	if (cf.dwEffects & CFE_ALLCAPS) effect.append("[CFE_ALLCAPS]");
+	if (cf.dwEffects & CFE_AUTOBACKCOLOR) effect.append("[CFE_AUTOBACKCOLOR]");
+	if (cf.dwEffects & CFE_AUTOCOLOR) effect.append("[CFE_AUTOCOLOR]");
+	if (cf.dwEffects & CFE_BOLD) effect.append("[CFE_BOLD]");
+	if (cf.dwEffects & CFE_DISABLED) effect.append("[CFE_DISABLED]");
+	if (cf.dwEffects & CFE_EMBOSS) effect.append("[CFE_EMBOSS]");
+	if (cf.dwEffects & CFE_EXTENDED) effect.append("[CFE_EXTENDED]");
+	if (cf.dwEffects & CFE_FONTBOUND) effect.append("[CFE_FONTBOUND]");
+	if (cf.dwEffects & CFE_HIDDEN) effect.append("[CFE_HIDDEN]");
+	if (cf.dwEffects & CFE_IMPRINT) effect.append("[CFE_IMPRINT]");
+	if (cf.dwEffects & CFE_ITALIC) effect.append("[CFE_ITALIC]");
+	if (cf.dwEffects & CFE_LINK) effect.append("[CFE_LINK]");
+	if (cf.dwEffects & CFE_LINKPROTECTED) effect.append("[CFE_LINKPROTECTED]");
+	if (cf.dwEffects & CFE_MATH) effect.append("[CFE_MATH]");
+	if (cf.dwEffects & CFE_MATHNOBUILDUP) effect.append("[CFE_MATHNOBUILDUP]");
+	if (cf.dwEffects & CFE_MATHORDINARY) effect.append("[CFE_MATHORDINARY]");
+	if (cf.dwEffects & CFE_OUTLINE) effect.append("[CFE_OUTLINE]");
+	if (cf.dwEffects & CFE_PROTECTED) effect.append("[CFE_PROTECTED]");
+	if (cf.dwEffects & CFE_REVISED) effect.append("[CFE_REVISED]");
+	if (cf.dwEffects & CFE_SHADOW) effect.append("[CFE_SHADOW]");
+	if (cf.dwEffects & CFE_SMALLCAPS) effect.append("[CFE_SMALLCAPS]");
+	if (cf.dwEffects & CFE_STRIKEOUT) effect.append("[CFE_STRIKEOUT]");
+	if (cf.dwEffects & CFE_SUBSCRIPT) effect.append("[CFE_SUBSCRIPT]");
+	if (cf.dwEffects & CFE_SUPERSCRIPT) effect.append("[CFE_SUPERSCRIPT]");
+	if (cf.dwEffects & CFE_UNDERLINE) effect.append("[CFE_UNDERLINE]");
+
+	temp.append("Mask : " + mask + "\n");
+	temp.append("Effect : " + effect + "\n");
+
+	printf(temp.c_str());
 }

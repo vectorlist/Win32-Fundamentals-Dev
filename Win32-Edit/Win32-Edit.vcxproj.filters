@@ -10,5 +10,11 @@
     <ClCompile Include="Edit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Edit2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RichEditor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

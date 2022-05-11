@@ -50,13 +50,13 @@ int main(int args, char* argv[])
 
 	pObj[0] = CreateSolidBrush(RGB(33, 33, 33));
 	pObj[1] = CreatePen(PS_SOLID, 1, RGB(22, 22, 22));
-	LOGFONT logFont{};
-	logFont.lfHeight = 16;
-	logFont.lfWeight = 0;
-	logFont.lfCharSet = ANSI_CHARSET;
+	lf lf{};
+	lf.lfHeight = 16;
+	lf.lfWeight = 0;
+	lf.lfCharSet = ANSI_CHARSET;
 	LPCSTR font = { "Consolas" };
-	memcpy(logFont.lfFaceName, font, sizeof(CHAR) * strlen(font));
-	pObj[2] = CreateFontIndirect(&logFont);
+	memcpy(lf.lfFaceName, font, sizeof(CHAR) * strlen(font));
+	pObj[2] = CreateFontIndirect(&lf);
 
 	//LoadLibrary(TEXT("Msftedit.dll"));
 	edit = CreateWindowEx(NULL, WC_EDIT, "Text Here...",

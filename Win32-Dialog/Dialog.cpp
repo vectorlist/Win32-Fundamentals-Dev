@@ -17,8 +17,6 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #define WC_CHILD	"WC_CHILD"
 #define DLGTITLE  "Debug"
 #define DLGFONT   "MS Sans Serif"
-#define DLGAPPLY  "&Apply"
-#define DLGCANCEL "&Cancel"
 #define NUMCHARS(aa) (sizeof(aa)/sizeof((aa)[0]))
 #define IDC_BITMAP 99
 
@@ -36,6 +34,8 @@ struct WindowData
 
 WindowData window;
 WindowData dlg;
+
+HFONT g_font;
 
 
 int main(int args, char* argv[])
@@ -59,18 +59,22 @@ int main(int args, char* argv[])
 		WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN, 600, 200, 700, 480, nullptr, 0, wc.hInstance, &window);
 
 
-	DlgTemplateBase dlgBase("Memory Dialog", WS_VISIBLE | WS_POPUPWINDOW, 20, 20, 200, 100);
-	dlgBase.AddItem("Memory Ctrl", WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
-	DlgTemplateBase::Button, 0, 0, 100, 40, 1);
+	DlgTemplateBase dlgBase("Memory Based Dialog", WS_VISIBLE | WS_POPUP, 20, 20, 280, 110);
+	dlgBase.AddItem("&Apply", WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
+	DlgTemplateBase::Button, 200, 70, 66, 11, 1);
+	dlgBase.AddItem("&Cancel", WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
+		DlgTemplateBase::Button, 200, 90, 66, 11, 2);
 
-	dlg.hwnd = CreateDialogIndirect(wc.hInstance, dlgBase,
-		window.hwnd,(DLGPROC)DlgProc, (LONG)&dlgBase);
+	dlg.hwnd = CreateDialogIndirect(
+		wc.hInstance,
+		dlgBase,
+		window.hwnd,
+		//NULL,
+		(DLGPROC)DlgProc,
+		(LONG)&dlgBase);
 
 	LOG::LogLastError();
 	ShowWindow(window.hwnd, TRUE);
-	//ShowWindow(dlg.hwnd, TRUE);
-
-	
 	
 	MSG msg{};
 	while (GetMessage(&msg, NULL, 0, 0))
@@ -86,13 +90,6 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 	return DefWindowProc(hwnd, msg, wp, lp);
 }
 
-LPCSTR GetWindowText(HWND hwnd) {
-	static std::string szTempStr;
-	UINT len = GetWindowTextLength(hwnd);
-	szTempStr.reserve(len);
-	GetWindowText(hwnd, (LPSTR)szTempStr.c_str(), len);
-	return szTempStr.c_str();
-}
 void PaintContorl(HWND hwnd, HDC dc, const RECT& rc)
 {
 	SetBkMode(dc, TRANSPARENT);
@@ -104,9 +101,9 @@ void PaintContorl(HWND hwnd, HDC dc, const RECT& rc)
 	Rectangle(dc, rc.left, rc.top, rc.right, rc.bottom);
 
 
-	SetTextColor(dc, RGB(220, 220, 220));
-	LPCSTR lpText = GetWindowText(hwnd);
-
+	SetTextColor(dc, RGB(200, 200, 200));
+	LPCSTR lpText = Wnd32::GetHwndText(hwnd);
+	SelectObject(dc, g_font);
 	DrawText(dc, lpText, -1, (LPRECT)&rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 	DeleteObject(pen);
 	DeleteObject(br);
@@ -114,6 +111,8 @@ void PaintContorl(HWND hwnd, HDC dc, const RECT& rc)
 INT_PTR WINAPI DlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
 	//printf("message : %s\n", LOG::WndMessage(msg));
+	static RECT fbRc; //floating bar rect
+	static HFONT font;
 	switch (msg)
 	{
 	case WM_NCCREATE: {
@@ -123,13 +122,14 @@ INT_PTR WINAPI DlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case WM_INITDIALOG: {
 		printf("WM_INITDIALOG\n");
 		HINSTANCE inst = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
-		HWND button = CreateWindowEx(NULL, WC_BUTTON, "button", WS_VISIBLE | WS_CHILD,
-			180, 20, 120, 30, hwnd,
-			(HMENU)33, inst, NULL);
 		DWORD id = 0;
 		DlgTemplateBase* base = (DlgTemplateBase*)lp;
+		RECT rc;
+		GetClientRect(hwnd, &rc);
+		rc.bottom =  22;
 
-		//UINT size = base->m_items.size();
+		fbRc = rc;
+		g_font = CreateFont(15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, DLGFONT);
 		break;
 	}
 
@@ -145,25 +145,41 @@ INT_PTR WINAPI DlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		PAINTSTRUCT ps{};
 		HDC dc = BeginPaint(hwnd, &ps);
 
-		Wnd32::DrawFillRect(dc, ps.rcPaint, RGB(35, 35, 35));
+		Wnd32::DrawFillRect(dc, ps.rcPaint, RGB(42, 42, 42));
+
+		Wnd32::DrawFillRect(dc, fbRc, RGB(45, 60, 90));
+		SetTextColor(dc, RGB(200, 200, 200));
+		::SelectObject(dc, g_font);
+		::DrawText(dc, Wnd32::GetHwndText(hwnd), -1, &fbRc, DT_SINGLELINE | DT_VCENTER | DT_WORDBREAK);
 		EndPaint(hwnd, &ps);
 		break;
 	}
 	case WM_DRAWITEM: {
-		
+
 		LPDRAWITEMSTRUCT dis = (LPDRAWITEMSTRUCT)lp;
-		printf("id : drawItem %d", dis->CtlID);
-		PaintContorl(dis->hwndItem,dis->hDC, dis->rcItem);
+		//printf("WM_DRAWITEM ID : %d NAME : %s\n", dis->CtlID, Wnd32::GetHwndText(dis->hwndItem));
+		PaintContorl(dis->hwndItem, dis->hDC, dis->rcItem);
 		break;
 	}
 	case WM_CLOSE: {
+		DeleteObject(font);
 		EndDialog(hwnd, IDCANCEL);
 		break;
 	}
+	case WM_COMMAND: {
+		HWND control = (HWND)lp;
+		printf("Command : %s , id : %d\n", Wnd32::GetHwndText(control), GetDlgCtrlID(control));
+		break;
+	}
+	
 	case WM_NCHITTEST: {
-		HRESULT hit = DefWindowProc(hwnd, msg, wp, lp);
-		if (hit == HTCLIENT) {
-			return HTCAPTION;
+		POINT pos;
+		pos.x = (SHORT)LOWORD(lp);
+		pos.y = (SHORT)HIWORD(lp);
+		ScreenToClient(hwnd, &pos);
+		bool bIn = PtInRect(&fbRc, pos);
+		if (bIn) {
+			SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
 		}
 		break;
 	}

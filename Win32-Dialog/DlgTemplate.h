@@ -35,7 +35,7 @@ struct DlgTemplateBase
 		WORD ctrl[2];
 	};
 	enum {
-		Button = 0x0080,
+		Button = 0x0080,Static = 0x0081
 	};
 	UINT8	m_pBuffer[DLGTEMPLATE_MAX_BUFFER];
 	UINT	m_uBufferOffset = 0;

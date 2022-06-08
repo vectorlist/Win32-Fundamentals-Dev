@@ -91,6 +91,7 @@ int main(int args, char* argv[])
 		ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN | WS_VISIBLE | WS_CHILD
 		| WS_CLIPSIBLINGS,
 		rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, mainHwnd, (HMENU)0, hInst, NULL);
+	//Subclassing
 	preEditProc = (WNDPROC)SetWindowLongPtr(edit, GWLP_WNDPROC, (LONG_PTR)editProc);
 
 	

@@ -1,5 +1,7 @@
 #pragma once
 #include <Windows.h>
+#include <iostream>
+#include <vector>
 
 namespace Wnd32 {
 
@@ -30,12 +32,15 @@ namespace Wnd32 {
 	}
 
 	inline BOOL GetChildHwndList(HWND src, UINT size, HWND* dst) {
+		static std::vector<HWND> temp;
+		temp.reserve(size);
 		HWND child = GetWindow(src, GW_CHILD);
 		if (!child) return FALSE;
 		for (size_t i = 0; i < size; i++) {
 			dst[i] = child;
 			child = GetNextWindow(child, GW_HWNDNEXT);
 		}
+		//dst = temp.data();
 		return TRUE;
 	}
 
@@ -52,6 +57,15 @@ namespace Wnd32 {
 		GetWindowRect(hwnd, &rc);
 		MapWindowPoints(HWND_DESKTOP, GetParent(hwnd), (LPPOINT)&rc, 2);
 		return rc;
+	}
+
+	inline void SetGeometry(HWND hwnd, const RECT& rc) {
+		::SetWindowPos(hwnd, HWND_TOP, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
+			SWP_NOZORDER);
+	}
+
+	inline void DrawRoundRect(HDC dc, const RECT& rc, int x, int y) {
+		::RoundRect(dc, rc.left, rc.top, rc.right, rc.bottom, x, y);
 	}
 }
 

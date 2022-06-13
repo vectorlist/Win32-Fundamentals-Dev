@@ -7,10 +7,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Layout.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="unittest.cpp">
+    <ClCompile Include="RawDrawPixel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

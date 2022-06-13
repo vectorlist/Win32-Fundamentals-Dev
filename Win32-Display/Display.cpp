@@ -231,25 +231,25 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	}
 	case WM_LBUTTONDOWN: {
 		if (hwnd != childHwnd) break;
-		//printf("WM_LBUTTONDOWN\n");
-		//HWND parent = GetParent(hwnd);
-		//HWND taskbar = FindWindow("Shell_TrayWnd", NULL);
-		////ShowWindow(taskbar, SW_SHOW);
-		////DISP_CHANGE_SUCCESSFUL       0
-		////DISP_CHANGE_RESTART          1
-		////DISP_CHANGE_FAILED          -1
-		////DISP_CHANGE_BADMODE         -2
-		////DISP_CHANGE_NOTUPDATED      -3
-		////DISP_CHANGE_BADFLAGS        -4
-		////DISP_CHANGE_BADPARAM        -5
-		////DISP_CHANGE_BADDUALVIEW     -6
-		//DEVMODE mode{};
-		//mode.dmSize = sizeof(DEVMODE);
-		//mode.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
-		//mode.dmBitsPerPel = 16;
-		//mode.dmPelsWidth = 640;
-		//mode.dmPelsHeight = 480;
-		//LONG res = ChangeDisplaySettings(&mode, CDS_FULLSCREEN);
+		printf("WM_LBUTTONDOWN\n");
+		HWND parent = GetParent(hwnd);
+		HWND taskbar = FindWindow("Shell_TrayWnd", NULL);
+		//ShowWindow(taskbar, SW_SHOW);
+		//DISP_CHANGE_SUCCESSFUL       0
+		//DISP_CHANGE_RESTART          1
+		//DISP_CHANGE_FAILED          -1
+		//DISP_CHANGE_BADMODE         -2
+		//DISP_CHANGE_NOTUPDATED      -3
+		//DISP_CHANGE_BADFLAGS        -4
+		//DISP_CHANGE_BADPARAM        -5
+		//DISP_CHANGE_BADDUALVIEW     -6
+		DEVMODE mode{};
+		mode.dmSize = sizeof(DEVMODE);
+		mode.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
+		mode.dmBitsPerPel = 16;
+		mode.dmPelsWidth = 640;
+		mode.dmPelsHeight = 480;
+		LONG res = ChangeDisplaySettings(&mode, CDS_FULLSCREEN);
 		//printf("ChangeDisplaySettings %d\n", res);
 		//
 		//if (!isFullCreen) {
@@ -269,17 +269,17 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			printf("VK_ESCAFE\n");
 			if (IsZoomed(hwnd)) {
 				OutputDebugString("fulls");
-				
+				//SendMessage(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
 			}
 		}
 		break;
 	}
 	case WM_GETMINMAXINFO: {
-		LPMINMAXINFO info = (MINMAXINFO*)lp;
-		info->ptMaxSize = {400,500};
-		info->ptMaxTrackSize.x = 600;
-		info->ptMaxTrackSize.y = 400;
-		break;
+		//LPMINMAXINFO info = (MINMAXINFO*)lp;
+		//info->ptMaxSize = {400,500};
+		//info->ptMaxTrackSize.x = 600;
+		//info->ptMaxTrackSize.y = 400;
+		//break;
 	}
 
 	}

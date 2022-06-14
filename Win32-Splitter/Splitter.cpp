@@ -5,6 +5,8 @@
 #include <iostream>
 
 #define WC_WINDOW	"WC_WINDOW"
+#define WIDTH 840
+#define HEIGHT 480
 LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 HWND hMain;
 HWND hEdit[2];
@@ -23,8 +25,10 @@ int main(int args, char* argv[])
 	GetClassInfoEx(wc.hInstance, wc.lpszClassName, &wc);
 	RegisterClassEx(&wc);
 
+	int x = (GetSystemMetrics(SM_CXSCREEN) - WIDTH) / 2;
+	int y = (GetSystemMetrics(SM_CYSCREEN) - HEIGHT) / 2;
 	hMain = CreateWindowEx(NULL, wc.lpszClassName, WC_WINDOW, WS_POPUP | WS_VISIBLE,
-		CW_USEDEFAULT, CW_USEDEFAULT, 400, 300, nullptr, 0, wc.hInstance, NULL);
+		x, y, WIDTH, HEIGHT, nullptr, 0, wc.hInstance, NULL);
 	
 	ShowWindow(hMain, TRUE);
 	UpdateWindow(hMain);
@@ -41,6 +45,12 @@ int main(int args, char* argv[])
 void DrawFillRect(HDC dc, const RECT &rc, COLORREF clr) {
 	::SetBkColor(dc, clr);
 	::ExtTextOut(dc, 0, 0, ETO_OPAQUE, &rc, NULL, 0, NULL);
+}
+
+void OnDraw(HWND hwnd, HDC dc) {
+	RECT rc;
+	GetClientRect(hwnd, &rc);
+	DrawFillRect(dc, rc, RGB(100, 0, 0));
 }
 
 LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
@@ -114,18 +124,18 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		PAINTSTRUCT ps{};
 		HDC dc = nullptr;
 		//Get Invalid area 
-		BOOL bInvalide = GetUpdateRect(hwnd, nullptr, FALSE);
+		//BOOL bInvalide = GetUpdateRect(hwnd, nullptr, FALSE);
+		BOOL bInvalide = DefWindowProc(hwnd, msg, wp, lp);
 		if (bInvalide) {
 			printf("WM_PAINT BeginPaint\n");
-			BeginPaint(hwnd, &ps);
+			dc = BeginPaint(hwnd, &ps);
+			OnDraw(hwnd, dc);
 			EndPaint(hwnd, &ps);
 		}
 		else {
 			printf("WM_PAINT DC paint\n");
 			dc = GetDC(hwnd);
-			GetClientRect(hwnd, &rc);
-			ps.hdc = dc;
-			ps.rcPaint = rc;
+			OnDraw(hwnd, dc);
 			ReleaseDC(hwnd, dc);
 		}
 		

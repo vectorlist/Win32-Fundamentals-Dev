@@ -52,13 +52,13 @@ int main(int args, char* argv[])
 	InitCommonControls();
 	HINSTANCE hInst = GetModuleHandle(NULL);
 	WNDCLASSEX wc{};
-	wc.cbSize = sizeof(wc);
+	wc.cbSize        = sizeof(wc);
 	wc.hbrBackground = (HBRUSH)GetStockObject(DKGRAY_BRUSH);
-	wc.hInstance = hInst;
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wc.hInstance     = hInst;
+	wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
 	wc.lpszClassName = WC_WINDOW;
-	wc.style = CS_VREDRAW | CS_HREDRAW;
-	wc.lpfnWndProc = WndProc;
+	wc.style         = CS_VREDRAW | CS_HREDRAW;
+	wc.lpfnWndProc   = WndProc;
 	GetClassInfoEx(wc.hInstance, wc.lpszClassName, &wc);
 	RegisterClassEx(&wc);
 
@@ -71,11 +71,11 @@ int main(int args, char* argv[])
 
 	pObj[0] = CreateSolidBrush(RGB(33, 33, 33));
 	LOGFONT lf{};
-	lf.lfHeight = 14;
-	lf.lfWeight = FW_THIN;
-	lf.lfCharSet = ANSI_CHARSET;
+	lf.lfHeight         = 14;
+	lf.lfWeight         = FW_THIN;
+	lf.lfCharSet        = ANSI_CHARSET;
 	lf.lfPitchAndFamily = 0;
-	lf.lfQuality = DEFAULT_QUALITY;
+	lf.lfQuality        = DEFAULT_QUALITY;
 	
 	LPCSTR font = { "Consolas" };
 	memcpy(lf.lfFaceName, font, sizeof(CHAR) * strlen(font));

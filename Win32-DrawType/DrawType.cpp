@@ -83,6 +83,8 @@ int main(int args, char* argv[])
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+	DeleteObject(pObj[0]);
+	DeleteObject(pObj[1]);
 	return msg.lParam;
 }
 

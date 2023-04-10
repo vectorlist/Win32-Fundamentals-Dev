@@ -7,10 +7,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Display.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="FullScreen.cpp">
+    <ClCompile Include="DragAndDrop.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

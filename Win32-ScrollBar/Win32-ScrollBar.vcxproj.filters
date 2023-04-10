@@ -7,10 +7,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Display.cpp">
+    <ClCompile Include="sb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FullScreen.cpp">
+    <ClCompile Include="sb2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

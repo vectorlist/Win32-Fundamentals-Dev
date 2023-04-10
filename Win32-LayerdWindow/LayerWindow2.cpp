@@ -117,9 +117,9 @@ void MainLayeredPaint(HWND hwnd, HDC dc) {
 	}
 
 	BLENDFUNCTION blend = { 0 };
-	blend.BlendOp = AC_SRC_OVER;
+	blend.BlendOp             = AC_SRC_OVER;
+	blend.AlphaFormat         = AC_SRC_ALPHA;
 	blend.SourceConstantAlpha = 255;
-	blend.AlphaFormat = AC_SRC_ALPHA;
 	BOOL bRet = UpdateLayeredWindow(hwnd, dc, ((LPPOINT)&rc),
 		&sz, memDc, &pt, 0x00000000, &blend, ULW_ALPHA);
 

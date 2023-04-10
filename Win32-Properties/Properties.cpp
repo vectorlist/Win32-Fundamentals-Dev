@@ -153,7 +153,8 @@ LRESULT WINAPI PropertiesProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			printf("Delete Properties allocated : %d\n", (int)prop);
 			HeapFree(GetProcessHeap(),HEAP_NO_SERIALIZE, prop);
 		}
-		Sleep(2000);
+		RemoveProp(hwnd, WND_PROPERTY);
+		Sleep(1500);
 	}break;
 	default:
 		break;

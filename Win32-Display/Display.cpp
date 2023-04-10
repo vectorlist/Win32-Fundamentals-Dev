@@ -213,6 +213,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	}
 	case WM_COMMAND: {
 		HWND lpHwnd = (HWND)lp;
+		
 		switch (wp)
 		{
 		case 0: {
